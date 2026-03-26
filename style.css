@@ -37,14 +37,56 @@ p {
     color: #000;
 }
 
-/* Beispielbild */
-#examples img {
-    max-width: 100%;
-    height: auto;
-    margin-bottom: 15px;
-    border-radius: 10px;
+#pictures {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
+#pictures img {
+    width: 220px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+#example-carts {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#examples {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.example-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.example-row img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.example-result {
+    flex: 1;
+    background: #f5f6fa;
+    color: #2f3547;
+    padding: 20px;
+    border-radius: 12px;
+}
 /* Upload-Input */
 input[type="file"] {
     display: block;

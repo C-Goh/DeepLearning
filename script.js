@@ -5,15 +5,39 @@ let label = "";
 let confidence = "";
 
 function setup() {
-
-
-
-    classifier = ml5.imageClassifier("MobileNet", () => {
+ classifier = ml5.imageClassifier("MobileNet", () => {
         console.log("Model geladen");
+
+        // Sobald Modell geladen → Beispielbilder klassifizieren
+        classifyExampleImages();
     });
 
-    // reagiert sofort auf Upload
-    document.getElementById("imageUpload").addEventListener("change", handleImageUpload);
+    document.getElementById("imageUpload")
+        .addEventListener("change", handleImageUpload)
+}
+
+function classifyExampleImages() {
+    const images = document.querySelectorAll(".example-row img");
+
+    images.forEach((imgElement, index) => {
+        classifier.classify(imgElement, (results) => {
+            showExampleResult(results, index);
+        });
+    });
+}
+
+function showExampleResult(results, index) {
+    let container = document.getElementById("result-" + index);
+
+    let topResults = results.slice(0, 3);
+
+    container.innerHTML = `<h4>Bild ${index + 1}</h4>`;
+
+    topResults.forEach(r => {
+        container.innerHTML += `
+            <p>${r.label} (${(r.confidence * 100).toFixed(2)}%)</p>
+        `;
+    });
 }
 
 function handleImageUpload(event) {

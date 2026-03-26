@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://github.com/plotly/plotly.js/releases"></script>
 
 </head>
 
@@ -18,10 +18,40 @@
     </header>
 
     <body>
-        <p>Einsendeaufgabe 1</p>
-        <p>Klassifikationsbeispiele</p>
+        
         <div id="examples">
-            <img src="/img/correct1.png" alt="">
+<h2>Korrekte Klassifikation</h2>
+            <div class="example-row">
+                <img src="./img/katze.png">
+                <div class="example-result" id="result-0"></div>
+            </div>
+
+            <div class="example-row">
+                <img src="./img/hund.png">
+                <div class="example-result" id="result-1"></div>
+            </div>
+
+            <div class="example-row">
+                <img src="./img/banane.png">
+                <div class="example-result" id="result-2"></div>
+            </div>
+
+            <h2>Korrekte Klassifikation</h2>
+            <div class="example-row">
+                <img src="./img/apfel.png">
+                <div class="example-result" id="result-3"></div>
+            </div>
+
+            <div class="example-row">
+                <img src="./img/Obstsalat.png">
+                <div class="example-result" id="result-4"></div>
+            </div>
+
+            <div class="example-row">
+                <img src="./img/Oger.png">
+                <div class="example-result" id="result-5"></div>
+            </div>
+
         </div>
 
         <div id="user">

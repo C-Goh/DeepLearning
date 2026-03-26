@@ -26,7 +26,6 @@ p {
 
 /* Hauptbereich in 2 Spalten */
 #user {
-
     margin-top: 100px;
     border: 1px solid #ccc;
     padding: 15px;
@@ -48,7 +47,15 @@ p {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    
+
+}
+
+#documentation {
+    margin-top: 100px;
+    margin-bottom: 100;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 #pictures {

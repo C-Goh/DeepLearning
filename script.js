@@ -14,6 +14,8 @@ function setup() {
 
     document.getElementById("imageUpload")
         .addEventListener("change", handleImageUpload)
+
+    select("#defaultCanvas0").remove();
 }
 
 function classifyExampleImages() {
@@ -103,7 +105,7 @@ function classifyImage() {
         return;
     }
 
-    label = "Analysiere...";
+    label = "Analysiert";
     confidence = "";
 
     classifier.classify(img, gotResult);
@@ -137,7 +139,6 @@ function gotResult(results) {
 
     Plotly.newPlot("chart", data, layout);
 
-    // OPTIONAL: Text im Canvas wie vorher
     fill(255);
     stroke(0);
     textSize(18);

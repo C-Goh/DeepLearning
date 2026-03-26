@@ -31,13 +31,39 @@ function showExampleResult(results, index) {
 
     let topResults = results.slice(0, 3);
 
-    container.innerHTML = `<h4>Bild ${index + 1}</h4>`;
+    // Eindeutige ID für das Diagramm
+    let chartId = "chart-" + index;
 
-    topResults.forEach(r => {
-        container.innerHTML += `
-            <p>${r.label} (${(r.confidence * 100).toFixed(2)}%)</p>
-        `;
-    });
+    // HTML + Chart-Container
+    container.innerHTML = `
+        <h4>Bild ${index + 1}</h4>
+        <div id="${chartId}" style="width:100%;height:300px;"></div>
+    `;
+
+    // Daten vorbereiten
+    let labels = topResults.map(r => r.label);
+    let values = topResults.map(r => r.confidence * 100);
+
+    // Plotly Daten
+    let data = [{
+        x: labels,
+        y: values,
+        type: "bar",
+        text: values.map(v => v.toFixed(2) + "%"),
+        textposition: "auto"
+    }];
+
+    let layout = {
+        title: "Top 3 Klassifikationen",
+        yaxis: {
+            title: "Confidence (%)",
+            range: [0, 100]
+        }
+    };
+
+    // Diagramm zeichnen
+    Plotly.newPlot(chartId, data, layout);
+
 }
 
 function handleImageUpload(event) {
@@ -87,7 +113,7 @@ function gotResult(results) {
     console.log(results);
 
     // Top 5 Ergebnisse nehmen
-    let topResults = results.slice(0, 5);
+    let topResults = results.slice();
 
     let labels = topResults.map(r => r.label);
     let values = topResults.map(r => (r.confidence * 100).toFixed(2));

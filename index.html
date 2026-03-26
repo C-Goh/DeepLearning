@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
-    <script src="https://github.com/plotly/plotly.js/releases"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 </head>
 
@@ -18,9 +18,9 @@
     </header>
 
     <body>
-        
+
         <div id="examples">
-<h2>Korrekte Klassifikation</h2>
+            <h2>Korrekte Klassifikation</h2>
             <div class="example-row">
                 <img src="./img/katze.png">
                 <div class="example-result" id="result-0"></div>
@@ -58,10 +58,11 @@
             <div id="upload">
                 <p>Bitte laden Sie ein Bild hoch</p>
                 <input type="file" id="imageUpload" />
-                <div>
-                    <button id="classifyButton" disabled onclick="classifyImage()">Classify</button>
-                </div>
             </div>
+            <div id="controlls">
+                <button id="classifyButton" disabled onclick="classifyImage()">Classify</button>
+            </div>
+
 
             <div id="chart">
 

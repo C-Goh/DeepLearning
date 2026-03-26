@@ -41,6 +41,7 @@ function showExampleResult(results, index) {
 }
 
 function handleImageUpload(event) {
+    document.getElementById("classifyButton").disabled = false;
     const file = event.target.files[0];
     let canvas = createCanvas(400, 400);
     canvas.parent("upload"); // <-- hier dein div mit id="upload"

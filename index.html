@@ -1,1 +1,43 @@
-<h1>Hello World</h1>
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Willkommen</h1>
+    </header>
+    <main>
+        <p>Hello World</p>
+        <input type="file" id="imageUpload" />
+        <img id="image" width="300" />
+        <button onclick="classifyImage()">Klassifizieren</button>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <canvas id="chart"></canvas>
+
+        <h2>Korrekte Klassifikation</h2>
+        <img src="img/correct1.png" onclick="classifyExample(this, 'cat')" />
+        <img src="img/correct2.png" onclick="classifyExample(this, 'dog')" />
+        <img src="img/correct3.png" onclick="classifyExample(this, 'car')" />
+
+        <h2>Falsche Klassifikation</h2>
+        <img src="img/wrong1.png" onclick="classifyExample(this, 'banana')" />
+        <img src="img/wrong2.png" onclick="classifyExample(this, 'dog')" />
+        <img src="img/wrong3.png" onclick="classifyExample(this, 'chair')" />
+
+        <p id="result"></p>
+    </main>
+    <footer>
+        <p>&copy; 2026 Deep Learning Projekt</p>
+    </footer>
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

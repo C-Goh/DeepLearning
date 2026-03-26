@@ -1,72 +1,28 @@
 let classifier;
+let img;
+
+let label = "";
+let confidence = "";
+
+function preload() {
+    classifier = ml5.imageClassifier("MobileNet");
+    img = loadImage("img/correct2.png");
+}
 
 function setup() {
-    classifier = ml5.imageClassifier('MobileNet', modelLoaded);
+  createCanvas(400, 400);
+  classifier.classify(img, gotResult);
+  image(img, 0, 0);
 }
 
-function modelLoaded() {
-    console.log("Model geladen!");
-}
+function gotResult(results) {
+  console.log(results);
 
-const imageElement = document.getElementById("image");
-
-document.getElementById("imageUpload").addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    imageElement.src = URL.createObjectURL(file);
-});
-
-function classifyImage() {
-    classifier.classify(imageElement, gotResult);
-}
-
-function gotResult(error, results) {
-    if (error) {
-        console.error(error);
-        return;
-    }
-
-    console.log(results);
-
-    document.getElementById("result").innerText =
-        results[0].label + " (" + (results[0].confidence * 100).toFixed(2) + "%)";
-    showChart(results)
-}
-
-let chart;
-
-function showChart(results) {
-    const labels = results.map(r => r.label);
-    const data = results.map(r => r.confidence);
-
-    const ctx = document.getElementById('chart').getContext('2d');
-
-    if (chart) chart.destroy();
-
-    chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Confidence',
-                data: data
-            }]
-        }
-    });
-}
-
-function classifyExample(img, expectedLabel) {
-  classifier.classify(img, function(error, results) {
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    const predicted = results[0].label;
-
-    const isCorrect = predicted.includes(expectedLabel);
-
-    img.style.border = isCorrect ? "5px solid green" : "5px solid red";
-
-    showChart(results);
-  });
+  fill(255);
+  stroke(0);
+  textSize(18);
+  label = "Label: " + results[0].label;
+  confidence = "Confidence: " + nf(results[0].confidence, 0, 2);
+  text(label, 10, 360);
+  text(confidence, 10, 380);
 }

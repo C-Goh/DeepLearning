@@ -1,14 +1,12 @@
 let classifier;
 let img;
 
-let label = "";
-let confidence = "";
-
+/**
+ * Initialisiert die Anwendung, lädt das MobileNet-Modell und klassifiziert die Beispielbilder.
+ */
 function setup() {
     classifier = ml5.imageClassifier("MobileNet", () => {
         console.log("Model geladen");
-
-        // Sobald Modell geladen → Beispielbilder klassifizieren
         classifyExampleImages();
     });
 
@@ -21,6 +19,9 @@ function setup() {
     background(220);
 }
 
+/**
+ * Klassifiziert die Beispielbilder und ruft die Funktion showExampleResult auf.
+ */
 function classifyExampleImages() {
     const images = document.querySelectorAll(".example-row img");
 
@@ -31,24 +32,26 @@ function classifyExampleImages() {
     });
 }
 
+
+/**
+ * Zeigt die Ergebnisse der Bildklassifikation in einem Balkendiagramm an.
+ * @param {*} results Ergenisse der Klassifikation
+ * @param {*} index Index des Beispielbildes
+ */
 function showExampleResult(results, index) {
     let container = document.getElementById("result-" + index);
 
     let topResults = results.slice(0, 3);
 
-    // Eindeutige ID für das Diagramm
     let chartId = "chart-" + index;
 
-    // HTML + Chart-Container
     container.innerHTML = `
         <div id="${chartId}" style="width:100%;height:300px;"></div>
     `;
 
-    // Daten vorbereiten
     let labels = topResults.map(r => r.label);
     let values = topResults.map(r => r.confidence * 100);
 
-    // Plotly Daten
     let data = [{
         x: labels,
         y: values,
@@ -65,14 +68,13 @@ function showExampleResult(results, index) {
         }
     };
 
-    // Diagramm zeichnen
     Plotly.newPlot(chartId, data, layout);
 
 }
 
 /**
  * Nimmt das hochgeladene Bild, zeigt es auf dem Canvas an und aktiviert den Klassifizierungsbutton.
- * @param {*} event 
+ * @param {*} event Event-Objekt des Datei-Uploads
  * @returns 
  */
 function handleImageUpload(event) {
@@ -81,7 +83,6 @@ function handleImageUpload(event) {
 
     if (!file) return;
 
-    // Canvas nur einmal erstellen
     if (!canvas) {
         canvas = createCanvas(400, 400);
         canvas.parent("upload");
@@ -98,11 +99,10 @@ function handleImageUpload(event) {
         image(img, 0, 0, width, height);
     });
 
-    // optional: Text zurücksetzen
-    label = "";
-    confidence = "";
 }
 
+/** Zeichnet das Bild und die Klassifikationsergebnisse auf dem Canvas.
+ */
 function draw() {
     background(220);
 
@@ -117,28 +117,26 @@ function draw() {
     text(confidence, 10, 380);
 }
 
+/**
+ * Klassifiziert das aktuell angezeigte Bild und zeigt die Ergebnisse in einem Balkendiagramm an.
+ */
 function classifyImage() {
-    if (!img) {
-        label = "Bitte zuerst ein Bild hochladen!";
-        return;
-    }
-
-    label = "Analysiert";
-    confidence = "";
 
     classifier.classify(img, gotResult);
 }
 
+/**
+ * Verarbeitet die Ergebnisse der Bildklassifikation.
+ * @param {*} results Die Klassifikationsergebnisse
+ */
 function gotResult(results) {
     console.log(results);
 
-    // Top 5 Ergebnisse nehmen
     let topResults = results.slice();
 
     let labels = topResults.map(r => r.label);
     let values = topResults.map(r => (r.confidence * 100).toFixed(2));
 
-    // Plotly Daten
     let data = [{
         x: labels,
         y: values,

@@ -25,6 +25,10 @@ p {
     line-height: 1.5;
 }
 
+h3 {
+    margin-top: 50px;
+}
+
 /* Hauptbereich in 2 Spalten */
 #user {
     margin-top: 100px;

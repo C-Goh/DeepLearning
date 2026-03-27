@@ -3,7 +3,7 @@ body {
     color: #ffffff;
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 100px;
 }
 
 header {
@@ -53,9 +53,11 @@ p {
 #documentation {
     margin-top: 100px;
     margin-bottom: 100;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+}
+
+#discussion {
+    margin-top: 100px;
+    margin-bottom: 100px;
 }
 
 #pictures {
@@ -80,10 +82,10 @@ p {
 }
 
 #examples {
+    width: 80%;
     display: flex;
-    gap: 40px;
+    gap: 20px;
     justify-content: center;
-    align-items: flex-start;
 }
 
 .column {
@@ -123,13 +125,12 @@ p {
     border: 1px solid #ccc;
 }
 
-/* Upload-Input */
 input[type="file"] {
     display: block;
     margin: 10px 0;
 }
 
-/* Button */
+
 button {
     padding: 10px 15px;
     border: none;

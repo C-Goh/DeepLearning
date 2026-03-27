@@ -20,49 +20,54 @@
     <body>
 
         <div id="examples">
-            <h2>Korrekte Klassifikation</h2>
-            <div class="example-row">
-                <img src="./img/katze.png">
-                <div class="example-result" id="result-0"></div>
+            <div class="column">
+                <h2>Korrekte Klassifikation</h2>
+
+                <div class="example-row">
+                    <img src="./img/katze.png">
+                    <div class="example-result" id="result-0"></div>
+                </div>
+
+                <div class="example-row">
+                    <img src="./img/hund.png">
+                    <div class="example-result" id="result-1"></div>
+                </div>
+
+                <div class="example-row">
+                    <img src="./img/banane.png">
+                    <div class="example-result" id="result-2"></div>
+                </div>
             </div>
 
-            <div class="example-row">
-                <img src="./img/hund.png">
-                <div class="example-result" id="result-1"></div>
-            </div>
+            <div class="column">
+                <h2>Falsche Klassifikation</h2>
 
-            <div class="example-row">
-                <img src="./img/banane.png">
-                <div class="example-result" id="result-2"></div>
-            </div>
+                <div class="example-row">
+                    <img src="./img/apfel.png">
+                    <div class="example-result" id="result-3"></div>
+                </div>
 
-            <h2>Falsche Klassifikation</h2>
-            <div class="example-row">
-                <img src="./img/apfel.png">
-                <div class="example-result" id="result-3"></div>
-            </div>
+                <div class="example-row">
+                    <img src="./img/Obstsalat.png">
+                    <div class="example-result" id="result-4"></div>
+                </div>
 
-            <div class="example-row">
-                <img src="./img/Obstsalat.png">
-                <div class="example-result" id="result-4"></div>
+                <div class="example-row">
+                    <img src="./img/Oger.png">
+                    <div class="example-result" id="result-5"></div>
+                </div>
             </div>
-
-            <div class="example-row">
-                <img src="./img/Oger.png">
-                <div class="example-result" id="result-5"></div>
-            </div>
-
         </div>
 
         <div id="user">
             <div id="upload">
                 <p>Bitte laden Sie ein Bild hoch</p>
                 <input type="file" id="imageUpload" />
-            </div>
-            <div id="controlls">
-                <button id="classifyButton" disabled onclick="classifyImage()">Classify</button>
-            </div>
 
+                <div id="controlls">
+                    <button id="classifyButton" disabled onclick="classifyImage()">Classify</button>
+                </div>
+            </div>
 
             <div id="chart">
 

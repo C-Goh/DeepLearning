@@ -5,7 +5,7 @@ let label = "";
 let confidence = "";
 
 function setup() {
- classifier = ml5.imageClassifier("MobileNet", () => {
+    classifier = ml5.imageClassifier("MobileNet", () => {
         console.log("Model geladen");
 
         // Sobald Modell geladen → Beispielbilder klassifizieren
@@ -15,7 +15,10 @@ function setup() {
     document.getElementById("imageUpload")
         .addEventListener("change", handleImageUpload)
 
-    select("#defaultCanvas0").remove();
+    canvas = createCanvas(400, 400);
+    canvas.parent("upload");
+
+    background(220);
 }
 
 function classifyExampleImages() {
@@ -38,7 +41,6 @@ function showExampleResult(results, index) {
 
     // HTML + Chart-Container
     container.innerHTML = `
-        <h4>Bild ${index + 1}</h4>
         <div id="${chartId}" style="width:100%;height:300px;"></div>
     `;
 
@@ -68,16 +70,32 @@ function showExampleResult(results, index) {
 
 }
 
+/**
+ * Nimmt das hochgeladene Bild, zeigt es auf dem Canvas an und aktiviert den Klassifizierungsbutton.
+ * @param {*} event 
+ * @returns 
+ */
 function handleImageUpload(event) {
     document.getElementById("classifyButton").disabled = false;
     const file = event.target.files[0];
-    let canvas = createCanvas(400, 400);
-    canvas.parent("upload"); // <-- hier dein div mit id="upload"
 
     if (!file) return;
 
+    // Canvas nur einmal erstellen
+    if (!canvas) {
+        canvas = createCanvas(400, 400);
+        canvas.parent("upload");
+    }
+
     img = loadImage(URL.createObjectURL(file), () => {
-        console.log("Bild direkt geladen & angezeigt");
+        console.log("Bild geladen & wird angezeigt");
+
+        let maxSize = 400;
+
+        let scale = min(maxSize / img.width, maxSize / img.height);
+
+        resizeCanvas(img.width * scale, img.height * scale);
+        image(img, 0, 0, width, height);
     });
 
     // optional: Text zurücksetzen

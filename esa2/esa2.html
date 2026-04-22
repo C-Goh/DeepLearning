@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>FFNN Regression</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="../style.css">
+
+</head>
+
+<body>
+
+<h1>FFNN Regression</h1>
+
+<div id="plots" class="grid"></div>
+
+<h2>Diskussion</h2>
+<p>
+Ohne Rauschen konnte das Modell die Funktion nahezu perfekt approximieren, wodurch Trainings- und Testfehler nahezu identisch waren. 
+Bei verrauschten Daten zeigte sich ein klarer Trade-off zwischen Bias und Varianz. 
+Das Best-Fit-Modell erreicht ein gutes Gleichgewicht und generalisiert gut auf Testdaten. 
+Das Overfit-Modell hingegen passt sich stark an das Rauschen an und zeigt deutlich schlechtere Testleistung. 
+Mit steigender Epochenzahl sinkt der Trainingsfehler weiter, während der Testfehler steigt. 
+Dies demonstriert klassisches Overfitting-Verhalten. 
+Die Wahl der Epochenzahl ist daher entscheidend für Generalisierung.
+</p>
+
+<h2>Dokumentation</h2>
+
+<h3>Technisch</h3>
+<ul>
+<li>TensorFlow.js: Training und Definition des neuronalen Netzes</li>
+<li>Chart.js: Visualisierung der Daten und Vorhersagen</li>
+</ul>
+
+<h3>Fachlich</h3>
+<p>
+Die Daten wurden zufällig im Intervall [-2,2] erzeugt und anschließend verrauscht. 
+Ein Feedforward-Netz mit zwei Hidden-Layern wurde verwendet. 
+Drei Modelle wurden trainiert: ohne Rauschen, Best-Fit und Overfit. 
+Die Modelle unterscheiden sich hauptsächlich durch die Anzahl der Trainings-Epochen. 
+Das Overfitting wurde durch starkes Weitertrainieren erreicht.
+</p>
+
+<script>
+
+// Ground truth
+function f(x){
+    return 0.5*(x+0.8)*(x+1.8)*(x-0.2)*(x-0.3)*(x-1.9)+1;
+}
+
+// Gaussian noise (Box-Muller)
+function gaussianNoise(varianz){
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * Math.sqrt(varianz);
+}
+
+// Generate data
+function generateData(N=100){
+    let data = [];
+    for(let i=0;i<N;i++){
+        let x = -2 + Math.random()*4;
+        let y = f(x);
+        data.push({x,y});
+    }
+    return data;
+}
+
+// Split
+function splitData(data){
+    data = data.sort(()=>Math.random()-0.5);
+    return [data.slice(0,50), data.slice(50)];
+}
+
+// Add noise
+function addNoise(data, varianz=0.05){
+    return data.map(p => ({x:p.x, y:p.y + gaussianNoise(varianz)}));
+}
+
+// Create model
+function createModel(){
+    const model = tf.sequential();
+    model.add(tf.layers.dense({units:100, activation:'relu', inputShape:[1]}));
+    model.add(tf.layers.dense({units:100, activation:'relu'}));
+    model.add(tf.layers.dense({units:1}));
+
+    model.compile({
+        optimizer: tf.train.adam(0.01),
+        loss: 'meanSquaredError'
+    });
+    return model;
+}
+
+// Train
+async function trainModel(model, data, epochs){
+    const xs = tf.tensor2d(data.map(p=>[p.x]));
+    const ys = tf.tensor2d(data.map(p=>[p.y]));
+
+    await model.fit(xs, ys, {
+        epochs: epochs,
+        batchSize: 32,
+        verbose: 0
+    });
+
+    return model;
+}
+
+// Predict
+function predict(model, data){
+    const xs = tf.tensor2d(data.map(p=>[p.x]));
+    const preds = model.predict(xs);
+    return preds.dataSync();
+}
+
+// MSE
+function mse(yTrue, yPred){
+    let sum=0;
+    for(let i=0;i<yTrue.length;i++){
+        sum += (yTrue[i]-yPred[i])**2;
+    }
+    return sum/yTrue.length;
+}
+
+// Plot
+function plot(title, dataTrain, dataTest, preds=null){
+    let canvas = document.createElement("canvas");
+    document.getElementById("plots").appendChild(canvas);
+
+    new Chart(canvas, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Train',
+                    data: dataTrain,
+                    backgroundColor: 'blue'
+                },
+                {
+                    label: 'Test',
+                    data: dataTest,
+                    backgroundColor: 'red'
+                },
+                preds ? {
+                    label: 'Prediction',
+                    data: preds,
+                    type: 'line',
+                    borderColor: 'green',
+                    fill:false
+                } : {}
+            ]
+        },
+        options: {
+            plugins: { title: { display: true, text: title }},
+            scales: {
+                x: { type: 'linear', position: 'bottom' }
+            }
+        }
+    });
+}
+
+// MAIN
+(async function(){
+
+    // Data
+    let data = generateData();
+    let [train, test] = splitData(data);
+
+    let trainNoisy = addNoise(train);
+    let testNoisy = addNoise(test);
+
+    // A2: no noise model
+    let modelClean = createModel();
+    await trainModel(modelClean, train, 200);
+
+    let predTrainClean = predict(modelClean, train);
+    let predTestClean = predict(modelClean, test);
+
+    // A3: best fit
+    let modelBest = createModel();
+    await trainModel(modelBest, trainNoisy, 200);
+
+    let predTrainBest = predict(modelBest, trainNoisy);
+    let predTestBest = predict(modelBest, testNoisy);
+
+    // A4: overfit
+    let modelOver = createModel();
+    await trainModel(modelOver, trainNoisy, 2000);
+
+    let predTrainOver = predict(modelOver, trainNoisy);
+    let predTestOver = predict(modelOver, testNoisy);
+
+    // Convert predictions
+    function combine(data, preds){
+        return data.map((p,i)=>({x:p.x, y:preds[i]}));
+    }
+
+    // R1
+    plot("Ohne Rauschen", train, test);
+    plot("Mit Rauschen", trainNoisy, testNoisy);
+
+    // R2
+    plot("Clean Train", train, [], combine(train, predTrainClean));
+    plot("Clean Test", test, [], combine(test, predTestClean));
+
+    // R3
+    plot("Best Train", trainNoisy, [], combine(trainNoisy, predTrainBest));
+    plot("Best Test", testNoisy, [], combine(testNoisy, predTestBest));
+
+    // R4
+    plot("Overfit Train", trainNoisy, [], combine(trainNoisy, predTrainOver));
+    plot("Overfit Test", testNoisy, [], combine(testNoisy, predTestOver));
+
+    // Loss output
+    console.log("Clean Train MSE:", mse(train.map(p=>p.y), predTrainClean));
+    console.log("Clean Test MSE:", mse(test.map(p=>p.y), predTestClean));
+
+    console.log("Best Train MSE:", mse(trainNoisy.map(p=>p.y), predTrainBest));
+    console.log("Best Test MSE:", mse(testNoisy.map(p=>p.y), predTestBest));
+
+    console.log("Overfit Train MSE:", mse(trainNoisy.map(p=>p.y), predTrainOver));
+    console.log("Overfit Test MSE:", mse(testNoisy.map(p=>p.y), predTestOver));
+
+})();
+</script>
+
+</body>
+</html>

@@ -61,9 +61,9 @@
 
         <div id="user">
             <div id="upload">
+                <h2>Klassifikation eigener Bilder</h2>
                 <p>Bitte laden Sie ein Bild hoch</p>
-                <input type="file" id="imageUpload" />
-
+                <input type="file" id="imageUpload" accept="image/*" />
                 <div id="controlls">
                     <button id="classifyButton" disabled onclick="classifyImage()">Classify</button>
                 </div>
@@ -77,6 +77,13 @@
         </div>
 
         <div id="discussion">
+            <h2>Hinweise</h2>
+            <ul>
+                <li>Um einen direkten platzsparenden Vergleich darzustellen, wurde sich dazu entschieden, die
+                    Klassifikationsbeispiele nebeneinander anzuzeigen.</li>
+                <li>Der Datei-Upload wurde für bessere Funktionalität auf Bilddateien beschränkt.</li>
+            </ul>
+
             <h2>Diskussion</h2>
             <p>
                 Die Ergebnisse zeigen, dass die Bildklassifikation mit ml5.js bei klar erkennbaren
@@ -104,30 +111,40 @@
 
             <h3>Klassifizierung mit ml5.js Bibliothek</h3>
             <p>
-                Für die Bildklassifikation habe ich die ml5.js Bibliothek verwendet, 
-                die auf TensorFlow.js basiert und eine einfache Schnittstelle für 
-                maschinelles Lernen im Browser bietet. Zunächst habe ich das vortrainierte 
-                MobileNet-Modell geladen, das auf einer großen Anzahl von Bildern trainiert 
-                wurde und in der Lage ist, eine Vielzahl von Objekten zu erkennen. Die Bilder 
-                wurden über ein Upload-Formular bereitgestellt, und nach dem Hochladen eines 
-                Bildes konnte der Nutzer auf einen Button klicken, um die Klassifikation zu starten. 
+                Für die Bildklassifikation habe ich die ml5.js Bibliothek verwendet,
+                die auf TensorFlow.js basiert und eine einfache Schnittstelle für
+                maschinelles Lernen im Browser bietet. Zunächst habe ich das vortrainierte
+                MobileNet-Modell geladen, das auf einer großen Anzahl von Bildern trainiert
+                wurde und in der Lage ist, eine Vielzahl von Objekten zu erkennen. Die Bilder
+                wurden über ein Upload-Formular bereitgestellt, und nach dem Hochladen eines
+                Bildes konnte der Nutzer auf einen Button klicken, um die Klassifikation zu starten.
                 Das Skript extrahiert dann die Merkmale des Bildes
             </p>
 
             <h3>Nutzung der p5.js Bibliothek</h3>
             <p>
-                Für die Erstellung interaktiver Visualisierungen habe ich p5.js verwendet. 
-                p5.js ist eine JavaScript-Bibliothek, die es ermöglicht, kreative Coding-Projekte 
+                Für die Erstellung interaktiver Visualisierungen habe ich p5.js verwendet.
+                p5.js ist eine JavaScript-Bibliothek, die es ermöglicht, kreative Coding-Projekte
                 und interaktive Grafiken im Browser zu erstellen.
             </p>
 
             <h3>Darstellung der Klassifikationsergebnisse mit Plotly</h3>
             <p>
-                Für die Visualisierung der Klassifikationsergebnisse habe ich Plotly verwendet. 
-                Plotly ist eine JavaScript-Bibliothek für die Erstellung interaktiver Diagramme 
-                und Visualisierungen. Es ermöglicht es, Daten in Form von Balken, Linien oder 
-                Punkten darzustellen und bietet eine intuitive Schnittstelle für die Anpassung 
+                Für die Visualisierung der Klassifikationsergebnisse habe ich Plotly verwendet.
+                Plotly ist eine JavaScript-Bibliothek für die Erstellung interaktiver Diagramme
+                und Visualisierungen. Es ermöglicht es, Daten in Form von Balken, Linien oder
+                Punkten darzustellen und bietet eine intuitive Schnittstelle für die Anpassung
                 der Darstellung.
+            </p>
+
+             <h3>Bildquellen</h3>
+             <p>
+                https://tiermedizin.thieme.de/fileadmin/_processed_/d/0/csm_Katze_gl%C3%BCcklich_Adobe_Stock_236992283_Elvira_29972d6faf.webp
+                https://suedflora.de/wpflora/wp-content/uploads/2021/08/shampion-apfel-kaufen-apfelbaum-baum.jpg  
+                https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcS7BI6l8lXzrOTfGMbVRieVlksj07pjPIQRjPqnNYVXCkUtT7JG
+                https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/content_gallery_slide_mobile/public/rezepte/2008/3/Fruchtig-frischer-Obstsalat-47ee1c7f35ec2.jpg?h=3fe45f0e&itok=5h0MwQvl           
+                https://www.bivano.com/fileadmin/images/bivano/banane-gross.jpg
+                https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvg1un_-yVfn2WCDdjEmJxYXKg6dIf4ardBUEXwUmDDrboeswt
             </p>
         </div>
 

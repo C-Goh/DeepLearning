@@ -1,0 +1,178 @@
+body {
+    background-color: #282c3c;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 100px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    margin-top: 30px;
+}
+
+footer {
+    min-height: 100px;
+    text-align: center;
+    margin-top: 40px;
+    color: #888;
+}
+
+/* Titel */
+p {
+    margin: 5px 0;
+    line-height: 1.5;
+}
+
+h3 {
+    margin-top: 50px;
+}
+
+/* Hauptbereich in 2 Spalten */
+#user {
+    margin-top: 100px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 10px;
+    background: #f9f9f9;
+    color: #000;
+
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#controlls {
+    display: flex;
+    justify-content: left;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Linke Seite */
+#upload {
+    flex: 1;
+}
+
+#documentation {
+    margin-top: 100px;
+    margin-bottom: 100px;
+}
+
+#discussion {
+    margin-top: 100px;
+    margin-bottom: 100px;
+}
+
+#pictures {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#pictures img {
+    width: 220px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#example-carts {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#examples {
+    width: 100%;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #f5f6fa;
+    padding: 20px;
+    border-radius: 12px;
+
+}
+
+.column h2 {
+    text-align: center;
+    color:#000;
+}
+
+.example-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.example-row img {
+    width: 250px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.example-result {
+    flex: 1;
+    color: #2f3547;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+}
+
+input[type="file"] {
+    display: block;
+    margin: 10px 0;
+}
+
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #35196d;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0c003f;
+}
+
+button:disabled {
+    background-color: gray;
+    color: white;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+
+/* Rechte Seite (Diagramm) */
+#chart {
+    flex: 2;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    background: #ffffff;
+    min-height: 500px;
+
+    /* 👉 Zentrierung */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    background-color: #ffffff;
+    margin-bottom: 20px;
+}

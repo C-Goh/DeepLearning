@@ -106,7 +106,7 @@
             position: absolute;
 
             top: 10px;
-            right: -15px;
+            left: -5px;
 
             width: 40px;
             height: 40px;
@@ -180,9 +180,7 @@
 
     </div>
 
-    <!-- ====================================================== -->
     <!-- R1 -->
-    <!-- ====================================================== -->
     <h2>R1) Datensätze</h2>
 
     <div class="grid">
@@ -197,9 +195,8 @@
         </div>
     </div>
 
-    <!-- ====================================================== -->
+
     <!-- R2 -->
-    <!-- ====================================================== -->
     <h2>R2) Modell ohne Rauschen trainiert</h2>
 
     <div class="grid">
@@ -218,9 +215,8 @@
         </div>
     </div>
 
-    <!-- ====================================================== -->
+
     <!-- R3 -->
-    <!-- ====================================================== -->
     <h2>R3) Best-Fit Modell (verrauschte Daten)</h2>
 
     <div class="grid">
@@ -239,9 +235,7 @@
         </div>
     </div>
 
-    <!-- ====================================================== -->
     <!-- R4 -->
-    <!-- ====================================================== -->
     <h2>R4) Overfit Modell (verrauschte Daten)</h2>
 
     <div class="grid">
@@ -260,9 +254,7 @@
         </div>
     </div>
 
-    <!-- ====================================================== -->
     <!-- Diskussion -->
-    <!-- ====================================================== -->
     <div class="discussion">
         <h3>Diskussion</h3>
 
@@ -297,9 +289,8 @@
         </p>
     </div>
 
-    <!-- ====================================================== -->
+
     <!-- Dokumentation -->
-    <!-- ====================================================== -->
     <div class="code">
         <h3>Dokumentation</h3>
 
@@ -344,6 +335,8 @@
         </p>
     </div>
 
+
+    <!-- Code -->
     <script>
 
         function toggleControls() {
@@ -358,9 +351,8 @@
             }
         }
 
-        // =====================================================
+
         // Ground Truth Funktion
-        // =====================================================
         function groundTruth(x) {
             return 0.5 *
                 (x + 0.8) *
@@ -370,9 +362,7 @@
                 (x - 1.9) + 1;
         }
 
-        // =====================================================
         // Gaussian Noise
-        // =====================================================
         function gaussianNoise(mean = 0, variance = 0.05) {
             const u1 = Math.random();
             const u2 = Math.random();
@@ -382,9 +372,8 @@
             return mean + Math.sqrt(variance) * z;
         }
 
-        // =====================================================
+
         // Datensatz erzeugen
-        // =====================================================
         function createDataset(N = 100) {
 
             let data = [];
@@ -415,9 +404,8 @@
             };
         }
 
-        // =====================================================
+
         // Datensatz speichern
-        // =====================================================
         function saveDataset() {
 
             if (!window.currentDataset) {
@@ -433,9 +421,8 @@
             alert("Datensatz gespeichert.");
         }
 
-        // =====================================================
+
         // Datensatz laden
-        // =====================================================
         function loadDataset() {
 
             const data = localStorage.getItem("ffnn_dataset");
@@ -450,9 +437,8 @@
             alert("Datensatz geladen.");
         }
 
-        // =====================================================
+
         // TensorFlow Modell
-        // =====================================================
         function createModel() {
 
             const model = tf.sequential();
@@ -481,9 +467,8 @@
             return model;
         }
 
-        // =====================================================
+
         // Training
-        // =====================================================
         async function trainModel(model, xTrain, yTrain, epochs) {
 
             const xs = tf.tensor2d(xTrain, [xTrain.length, 1]);
@@ -502,9 +487,8 @@
             return history;
         }
 
-        // =====================================================
+
         // Vorhersage
-        // =====================================================
         async function predict(model, xData) {
 
             const xs = tf.tensor2d(xData, [xData.length, 1]);
@@ -519,9 +503,8 @@
             return Array.from(values);
         }
 
-        // =====================================================
+
         // MSE
-        // =====================================================
         function mse(real, pred) {
 
             let sum = 0;
@@ -533,9 +516,9 @@
             return sum / real.length;
         }
 
-        // =====================================================
+
+
         // Plot erstellen
-        // =====================================================
         function plotDataset(canvasId, trainData, testData, noisy = false) {
 
             const ctx = document.getElementById(canvasId);
@@ -576,9 +559,9 @@
             });
         }
 
-        // =====================================================
+
+
         // Prediction Plot
-        // =====================================================
         function plotPrediction(
             canvasId,
             xData,
@@ -641,9 +624,9 @@
             });
         }
 
-        // =====================================================
-        // Gesamtes Experiment
-        // =====================================================
+
+
+        // Gesamtes Experiment ausführen
         async function runExperiment() {
 
             document.getElementById("status").innerText = "Training läuft...";
@@ -656,16 +639,12 @@
             const train = dataset.train;
             const test = dataset.test;
 
-            // =================================================
+
             // Datensätze plotten
-            // =================================================
             plotDataset('datasetClean', train, test, false);
             plotDataset('datasetNoise', train, test, true);
 
-            // =================================================
             // Daten vorbereiten
-            // =================================================
-
             const xTrain = train.map(p => p.x);
             const xTest = test.map(p => p.x);
 
@@ -675,9 +654,7 @@
             const yTrainNoise = train.map(p => p.yNoise);
             const yTestNoise = test.map(p => p.yNoise);
 
-            // =================================================
             // Modell ohne Rauschen
-            // =================================================
             const cleanModel = createModel();
 
             await trainModel(
@@ -715,9 +692,8 @@
             document.getElementById('cleanTestLoss').innerHTML =
                 `<b>Test MSE:</b> ${cleanTestMSE.toFixed(6)}`;
 
-            // =================================================
+
             // Best Fit Modell
-            // =================================================
             const bestModel = createModel();
 
             await trainModel(
@@ -755,9 +731,8 @@
             document.getElementById('bestTestLoss').innerHTML =
                 `<b>Test MSE:</b> ${bestTestMSE.toFixed(6)}`;
 
-            // =================================================
+
             // Overfit Modell
-            // =================================================
             const overfitModel = createModel();
 
             await trainModel(
@@ -795,9 +770,8 @@
             document.getElementById('overfitTestLoss').innerHTML =
                 `<b>Test MSE:</b> ${overfitTestMSE.toFixed(6)}`;
 
-            // =================================================
+
             // Modelle speichern
-            // =================================================
             await cleanModel.save('localstorage://clean-model');
             await bestModel.save('localstorage://best-model');
             await overfitModel.save('localstorage://overfit-model');
@@ -806,9 +780,8 @@
                 "Experiment abgeschlossen.";
         }
 
-        // =====================================================
+
         // Automatischer Start beim Laden der Seite
-        // =====================================================
         window.addEventListener('load', () => {
             runExperiment();
         });

@@ -92,6 +92,7 @@
         .controls {
             background: white;
             padding: 20px;
+            padding-left: 80px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -104,9 +105,10 @@
 
         .toggle-btn {
             position: absolute;
+            padding: 0px;
 
             top: 10px;
-            left: -5px;
+            left: 20px;
 
             width: 40px;
             height: 40px;
@@ -114,7 +116,7 @@
             border-radius: 50%;
             border: none;
 
-            background: #1976d2;
+            background: #0ac451;
             color: white;
 
             font-size: 18px;
@@ -180,7 +182,6 @@
 
     </div>
 
-    <!-- R1 -->
     <h2>R1) Datensätze</h2>
 
     <div class="grid">
@@ -196,7 +197,7 @@
     </div>
 
 
-    <!-- R2 -->
+
     <h2>R2) Modell ohne Rauschen trainiert</h2>
 
     <div class="grid">
@@ -216,7 +217,7 @@
     </div>
 
 
-    <!-- R3 -->
+
     <h2>R3) Best-Fit Modell (verrauschte Daten)</h2>
 
     <div class="grid">
@@ -235,7 +236,7 @@
         </div>
     </div>
 
-    <!-- R4 -->
+
     <h2>R4) Overfit Modell (verrauschte Daten)</h2>
 
     <div class="grid">
@@ -254,38 +255,23 @@
         </div>
     </div>
 
-    <!-- Diskussion -->
+
     <div class="discussion">
         <h3>Diskussion</h3>
 
         <p>
             Für die Regression wurde ein Feed-Forward Neural Network mit zwei Hidden-Layern und jeweils 100 Neuronen
-            verwendet.
-            Als Aktivierungsfunktion kam ReLU zum Einsatz, im Output-Layer eine lineare Aktivierung.
-        </p>
-
-        <p>
-            Beim Training auf den unverrauschten Daten zeigen Trainings- und Test-Loss sehr ähnliche Werte.
-            Das Modell generalisiert hier sehr gut, da die Daten exakt auf der Ground-Truth Funktion liegen.
-        </p>
-
-        <p>
-            Beim verrauschten Datensatz tritt dagegen das typische Verhalten von Overfitting auf.
-            Das Best-Fit Modell wurde mit weniger Epochs trainiert und generalisiert daher besser.
-            Das Overfit-Modell wurde deutlich länger trainiert und passt sich stark an das Rauschen der Trainingsdaten
-            an.
-        </p>
-
-        <p>
-            Dadurch wird der Trainings-Loss extrem klein, während der Test-Loss deutlich schlechter wird.
-            Besonders sichtbar ist dies in den Vorhersageplots: die Vorhersagekurve des Overfit-Modells schwankt
-            stärker.
-        </p>
-
-        <p>
-            Die Aufgabe zeigt deutlich, warum unabhängige Testdaten wichtig sind und weshalb Overfitting in der Praxis
-            problematisch ist.
-            Außerdem wird sichtbar, dass die Wahl der Epochs einen starken Einfluss auf die Generalisierung besitzt.
+            verwendet. Als Aktivierungsfunktion kam ReLU zum Einsatz, da diese effizient trainierbar ist und sich gut
+            für nichtlineare Zusammenhänge eignet. Im Output-Layer wurde eine lineare Aktivierung verwendet, da
+            kontinuierliche Werte vorhergesagt werden. Als Optimizer wurde Adam mit einer Learning Rate von 0.01 und
+            einer Batch-Size von 32 verwendet. Die Daten wurden zufällig im Intervall [-2,+2] erzeugt und zusätzlich mit
+            Gaussian Noise der Varianz 0.05 verrauscht. Beim Training auf unverrauschten Daten waren Trainings- und
+            Test-Loss nahezu identisch, wodurch eine sehr gute Generalisierung sichtbar wurde. Das Best-Fit Modell auf
+            verrauschten Daten zeigte ebenfalls nur geringe Unterschiede zwischen Trainings- und Testfehler. Durch stark
+            erhöhte Trainings-Epochs konnte gezielt Overfitting erzeugt werden. Dabei wurde der Trainingsfehler sehr
+            klein, während der Testfehler deutlich schlechter blieb. Insgesamt wurde deutlich, dass eine zu hohe Anzahl
+            an Epochs die Generalisierung verschlechtert und ein kleiner Trainingsfehler allein kein gutes Modell
+            garantiert.
         </p>
     </div>
 
@@ -297,26 +283,26 @@
         <h3>1) Technisch</h3>
 
         <p>
-            <b>TensorFlow.js:</b> Wird verwendet, um das neuronale Netzwerk direkt im Browser zu erstellen,
+            <b>TensorFlow.js</b> wird verwendet, um das neuronale Netzwerk direkt im Browser zu erstellen,
             zu trainieren und Vorhersagen zu berechnen.
         </p>
 
         <p>
-            <b>Chart.js:</b> Wird für die Visualisierung der Datensätze,
+            <b>Chart.js</b> wird für die Visualisierung der Datensätze,
             Modellvorhersagen und Trainingsresultate verwendet.
         </p>
 
         <p>
-            <b>HTML/CSS/JavaScript:</b> Aufbau der Benutzeroberfläche,
-            Steuerung der Experimente und Darstellung der Resultate.
+            Mittels <b>HTML/CSS/JavaScript</b> wird der Aufbau der Benutzeroberfläche,
+            Steuerung der Experimente und Darstellung der Resultate realisiert.
         </p>
 
         <h3>2) Fachlich</h3>
 
         <p>
             Die Daten werden zufällig im Intervall [-2,+2] erzeugt.
-            Anschließend wird die Ground-Truth Funktion berechnet.
-            Danach wird Gaussian Noise mit einer Varianz von 0.05 addiert.
+            Anschließend wird die Ground-Truth Funktion berechnet und darauf folgend die Gaussian Noise mit einer
+            Varianz von 0.05 addiert.
         </p>
 
         <p>
@@ -330,19 +316,44 @@
             Das Overfit-Modell wird deutlich länger trainiert, sodass sich das Netzwerk an das Rauschen anpasst.
         </p>
 
+        <h3>3) Experimente und Fragestellungen </h3>
         <p>
-            Zusätzlich enthält die Anwendung Funktionen zum Speichern und Laden von Datensätzen.
+            Die durchgeführten Experimente zeigten deutlich den Einfluss von Rauschen und Trainingsdauer auf die
+            Generalisierung eines Feed-Forward Neural Networks. Beim Training auf unverrauschten Daten erzielte das
+            Modell nahezu identische Trainings- und Testfehler, da die zugrunde liegende Funktion exakt gelernt werden
+            konnte. Beim Training auf verrauschten Daten mit moderater Anzahl an Epochs generalisierte das Modell
+            weiterhin gut und zeigte nur geringe Unterschiede zwischen Trainings- und Test-Loss. Durch sehr langes
+            Training konnte Overfitting erzeugt werden. Der Trainingsfehler wurde hierbei sehr klein, während der
+            Testfehler deutlich schlechter ausfiel. Das Modell begann dabei, das zufällige Rauschen der Trainingsdaten
+            auswendig zu lernen. Insgesamt zeigen die Ergebnisse, dass ein kleiner Trainingsfehler allein nicht
+            ausreicht, sondern vor allem die Generalisierung auf unbekannte Testdaten entscheidend ist.
         </p>
+
+        <h3>4) Genutze Quellen für die Ausarbeitung</h3>
+        <p>
+        <ul>
+            <li>TensorFlow.js Dokumentation: <a href="https://www.tensorflow.org/js">https://www.tensorflow.org/js</a>
+            </li>
+            <li>Chart.js Dokumentation: <a
+                    href="https://www.chartjs.org/docs/latest/">https://www.chartjs.org/docs/latest/</a></li>
+            <li>TensorFlow.js Linear Regression Tutorial: <a
+                    href="https://www.tensorflow.org/js/tutorials/training/linear_regression">https://www.tensorflow.org/js/tutorials/training/linear_regression</a>
+            </li>
+            <li>FFNN Visualisierung: <a
+                    href="https://ffnn.veronikasimmering.de/"></a>https://ffnn.veronikasimmering.de/</a>
+
+        </ul>
+
     </div>
 
 
-    <!-- Code -->
     <script>
 
         function toggleControls() {
             const controls = document.getElementById("controls");
+            const btn = document.querySelector(".toggle-btn");
+
             controls.classList.toggle("hidden");
-            const btn = controls.querySelector(".toggle-btn");
 
             if (controls.classList.contains("hidden")) {
                 btn.innerText = "▼";

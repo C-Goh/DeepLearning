@@ -171,11 +171,17 @@
             <p> Hidden Layer Neuronen: <input type="number" id="hiddenUnits" value="100"> </p>
             <hr> <button onclick="saveModels()"> Modell speichern </button>
 
-            <input type="file" id="modelFile" accept=".json" style="display:none" onchange="loadModel(event)">
 
-            <button onclick="document.getElementById('modelFile').click()">
+            <input type="file" id="modelFile" multiple accept=".json,.bin" style="display:none"
+                onchange="loadModel(event)">
+
+            <button onclick="
+    document.getElementById('modelFile').click()
+">
                 Modell laden
             </button>
+
+
 
             <button onclick="testLoadedModels()"> Modell testen </button>
 
@@ -1013,7 +1019,7 @@
 
 
 
-        async function loadModels() {
+        async function loadModel() {
 
             try {
 

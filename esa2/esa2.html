@@ -162,6 +162,23 @@
 
         <div class="controls" id="controls">
 
+            <hr>
+            <h3>Modellparameter</h3>
+            <p> Epochs Best-Fit: <input type="number" id="bestEpochs" value="150"> </p>
+            <p> Epochs Overfit: <input type="number" id="overfitEpochs" value="3000"> </p>
+            <p> Learning Rate: <input type="number" step="0.001" id="learningRate" value="0.01"> </p>
+            <p> Batch Size: <input type="number" id="batchSize" value="32"> </p>
+            <p> Hidden Layer Neuronen: <input type="number" id="hiddenUnits" value="100"> </p>
+            <hr> <button onclick="saveModels()"> Modell speichern </button>
+
+            <input type="file" id="modelFile" accept=".json" style="display:none" onchange="loadModel(event)">
+
+            <button onclick="document.getElementById('modelFile').click()">
+                Modell laden
+            </button>
+
+            <button onclick="testLoadedModels()"> Modell testen </button>
+
             <button onclick="runExperiment()">
                 Experiment starten
             </button>
@@ -170,9 +187,14 @@
                 Datensatz speichern
             </button>
 
-            <button onclick="loadDataset()">
+
+            <input type="file" id="datasetFile" accept=".json" style="display:none" onchange="loadDataset(event)">
+
+            <button onclick="document.getElementById('datasetFile').click()">
                 Datensatz laden
             </button>
+
+
 
             <div class="status" id="status">
                 Training läuft...
@@ -349,6 +371,53 @@
 
     <script>
 
+        const charts = {};
+
+
+        function clearAllCharts() {
+
+            Object.keys(charts).forEach(key => {
+
+                charts[key].destroy();
+
+                const canvas =
+                    document.getElementById(key);
+
+                const ctx =
+                    canvas.getContext("2d");
+
+                ctx.clearRect(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+                delete charts[key];
+            });
+
+            // Loss-Felder leeren
+            const lossFields = [
+
+                'cleanTrainLoss',
+                'cleanTestLoss',
+
+                'bestTrainLoss',
+                'bestTestLoss',
+
+                'overfitTrainLoss',
+                'overfitTestLoss'
+            ];
+
+            lossFields.forEach(id => {
+
+                document.getElementById(id).innerHTML = "";
+            });
+        }
+
+
+
+
         function toggleControls() {
             const controls = document.getElementById("controls");
             const btn = document.querySelector(".toggle-btn");
@@ -417,51 +486,127 @@
 
 
         // Datensatz speichern
+
         function saveDataset() {
 
             if (!window.currentDataset) {
+
                 alert("Noch kein Datensatz vorhanden.");
                 return;
             }
 
-            localStorage.setItem(
-                "ffnn_dataset",
-                JSON.stringify(window.currentDataset)
+            // Datensatz in JSON umwandeln
+            const jsonData = JSON.stringify(
+                window.currentDataset,
+                null,
+                2
             );
 
-            alert("Datensatz gespeichert.");
+            // Blob erzeugen
+            const blob = new Blob(
+                [jsonData],
+                { type: "application/json" }
+            );
+
+            // Download-Link erzeugen
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+
+            a.href = url;
+
+            a.download = "ffnn_dataset.json";
+
+            document.body.appendChild(a);
+
+            // Download starten
+            a.click();
+
+            // Aufräumen
+            document.body.removeChild(a);
+
+            URL.revokeObjectURL(url);
+
+            alert("Datensatz heruntergeladen.");
         }
+
 
 
         // Datensatz laden
-        function loadDataset() {
 
-            const data = localStorage.getItem("ffnn_dataset");
+        function loadDataset(event) {
 
-            if (!data) {
-                alert("Kein gespeicherter Datensatz gefunden.");
+            const file = event.target.files[0];
+
+            if (!file) {
+
+                alert("Keine Datei ausgewählt.");
                 return;
             }
 
-            window.currentDataset = JSON.parse(data);
+            const reader = new FileReader();
 
-            alert("Datensatz geladen.");
+            reader.onload = function (e) {
+
+                try {
+
+                    const dataset =
+                        JSON.parse(e.target.result);
+
+                    // Datensatz speichern
+                    window.currentDataset = dataset;
+
+                    // Datensatz visualisieren
+                    plotDataset(
+                        'datasetClean',
+                        dataset.train,
+                        dataset.test,
+                        false
+                    );
+
+                    plotDataset(
+                        'datasetNoise',
+                        dataset.train,
+                        dataset.test,
+                        true
+                    );
+
+                    alert("Datensatz geladen.");
+
+                } catch (err) {
+
+                    console.error(err);
+
+                    alert(
+                        "Ungültige Datensatz-Datei."
+                    );
+                }
+            };
+
+            reader.readAsText(file);
         }
+
 
 
         // TensorFlow Modell
         function createModel() {
 
+            const hiddenUnits =
+                parseInt(document.getElementById("hiddenUnits").value);
+
+            const learningRate =
+                parseFloat(document.getElementById("learningRate").value);
+
             const model = tf.sequential();
 
             model.add(tf.layers.dense({
-                units: 100,
+                units: hiddenUnits,
                 activation: 'relu',
                 inputShape: [1]
             }));
 
             model.add(tf.layers.dense({
-                units: 100,
+                units: hiddenUnits,
                 activation: 'relu'
             }));
 
@@ -471,7 +616,7 @@
             }));
 
             model.compile({
-                optimizer: tf.train.adam(0.01),
+                optimizer: tf.train.adam(learningRate),
                 loss: 'meanSquaredError'
             });
 
@@ -479,15 +624,21 @@
         }
 
 
+
+
         // Training
+
         async function trainModel(model, xTrain, yTrain, epochs) {
+
+            const batchSize =
+                parseInt(document.getElementById("batchSize").value);
 
             const xs = tf.tensor2d(xTrain, [xTrain.length, 1]);
             const ys = tf.tensor2d(yTrain, [yTrain.length, 1]);
 
             const history = await model.fit(xs, ys, {
                 epochs: epochs,
-                batchSize: 32,
+                batchSize: batchSize,
                 shuffle: true,
                 verbose: 0
             });
@@ -497,6 +648,8 @@
 
             return history;
         }
+
+
 
 
         // Vorhersage
@@ -530,11 +683,18 @@
 
 
         // Plot erstellen
+
         function plotDataset(canvasId, trainData, testData, noisy = false) {
+
+            // Alte Chart zerstören
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
 
             const ctx = document.getElementById(canvasId);
 
-            new Chart(ctx, {
+            charts[canvasId] = new Chart(ctx, {
+
                 type: 'scatter',
 
                 data: {
@@ -572,6 +732,8 @@
 
 
 
+
+
         // Prediction Plot
         function plotPrediction(
             canvasId,
@@ -580,6 +742,11 @@
             yPred,
             title
         ) {
+
+            // Alte Chart zerstören
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
 
             const ctx = document.getElementById(canvasId);
 
@@ -595,7 +762,8 @@
 
             predPoints.sort((a, b) => a.x - b.x);
 
-            new Chart(ctx, {
+            charts[canvasId] = new Chart(ctx, {
+
                 type: 'scatter',
 
                 data: {
@@ -637,9 +805,12 @@
 
 
 
+
         // Gesamtes Experiment ausführen
         async function runExperiment() {
 
+            // Alle alten Charts entfernen 
+            clearAllCharts();
             document.getElementById("status").innerText = "Training läuft...";
 
             // Datensatz erzeugen
@@ -667,6 +838,8 @@
 
             // Modell ohne Rauschen
             const cleanModel = createModel();
+            window.cleanModel = cleanModel;
+
 
             await trainModel(
                 cleanModel,
@@ -706,12 +879,14 @@
 
             // Best Fit Modell
             const bestModel = createModel();
+            window.bestModel = bestModel;
+
 
             await trainModel(
                 bestModel,
                 xTrain,
                 yTrainNoise,
-                150
+                parseInt(document.getElementById("bestEpochs").value)
             );
 
             const predBestTrain = await predict(bestModel, xTrain);
@@ -745,12 +920,12 @@
 
             // Overfit Modell
             const overfitModel = createModel();
-
+            window.overfitModel = overfitModel;
             await trainModel(
                 overfitModel,
                 xTrain,
                 yTrainNoise,
-                3000
+                parseInt(document.getElementById("overfitEpochs").value)
             );
 
             const predOverfitTrain = await predict(overfitModel, xTrain);
@@ -783,9 +958,9 @@
 
 
             // Modelle speichern
-            await cleanModel.save('localstorage://clean-model');
-            await bestModel.save('localstorage://best-model');
-            await overfitModel.save('localstorage://overfit-model');
+            /* await cleanModel.save('localstorage://clean-model');
+             await bestModel.save('localstorage://best-model');
+             await overfitModel.save('localstorage://overfit-model');*/
 
             document.getElementById("status").innerText =
                 "Experiment abgeschlossen.";
@@ -796,6 +971,122 @@
         window.addEventListener('load', () => {
             runExperiment();
         });
+
+
+
+        async function saveModels() {
+
+            try {
+
+                if (!window.cleanModel ||
+                    !window.bestModel ||
+                    !window.overfitModel) {
+
+                    alert("Noch keine Modelle vorhanden.");
+                    return;
+                }
+
+                // Clean Model
+                await window.cleanModel.save(
+                    'downloads://clean-model'
+                );
+
+                // Best-Fit Model
+                await window.bestModel.save(
+                    'downloads://best-model'
+                );
+
+                // Overfit Model
+                await window.overfitModel.save(
+                    'downloads://overfit-model'
+                );
+
+                alert("Modelle heruntergeladen.");
+
+            } catch (err) {
+
+                console.error(err);
+
+                alert("Fehler beim Speichern.");
+            }
+        }
+
+
+
+        async function loadModels() {
+
+            try {
+
+                window.cleanModel =
+                    await tf.loadLayersModel(
+                        'localstorage://clean-model'
+                    );
+
+                window.bestModel =
+                    await tf.loadLayersModel(
+                        'localstorage://best-model'
+                    );
+
+                window.overfitModel =
+                    await tf.loadLayersModel(
+                        'localstorage://overfit-model'
+                    );
+
+                alert("Modelle geladen.");
+
+            } catch (err) {
+
+                console.error(err);
+
+                alert("Keine gespeicherten Modelle gefunden.");
+            }
+        }
+
+
+        async function testLoadedModels() {
+
+            if (!window.currentDataset) {
+
+                alert("Bitte zuerst Datensatz laden.");
+                return;
+            }
+
+            if (!window.bestModel) {
+
+                alert("Bitte zuerst Modelle laden.");
+                return;
+            }
+
+            const test = window.currentDataset.test;
+
+            const xTest = test.map(p => p.x);
+
+            const yTestNoise =
+                test.map(p => p.yNoise);
+
+            const pred =
+                await predict(window.bestModel, xTest);
+
+            const error =
+                mse(yTestNoise, pred);
+
+            alert(
+                "Best-Model Test MSE: " +
+                error.toFixed(6)
+            );
+
+            plotPrediction(
+                'bestTestPrediction',
+                xTest,
+                yTestNoise,
+                pred,
+                'Geladenes Modell – Test'
+            );
+        }
+
+
+
+
 
     </script>
 

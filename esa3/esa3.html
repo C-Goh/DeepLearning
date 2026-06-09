@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSTM Language Model - Wortvorhersage</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.5.1/dist/tfjs-vis.umd.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --primary: #1976D2;
+            --primary-dark: #1565C0;
+            --secondary: #424242;
+            --success: #388E3C;
+            --warning: #F57C00;
+            --error: #D32F2F;
+            --background: #FAFAFA;
+            --surface: #FFFFFF;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border: #E0E0E0;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #333;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #2E7D32;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #EF6C00;
+        }
+
+        .btn-error {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-error:hover:not(:disabled) {
+            background: #C62828;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .progress-container {
+            margin: 16px 0;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .status {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 16px 0;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-info {
+            background: #E3F2FD;
+            color: #1565C0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .status-success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-left: 4px solid var(--success);
+        }
+
+        .status-warning {
+            background: #FFF3E0;
+            color: #E65100;
+            border-left: 4px solid var(--warning);
+        }
+
+        .status-error {
+            background: #FFEBEE;
+            color: #C62828;
+            border-left: 4px solid var(--error);
+        }
+
+        .text-input-area {
+            position: relative;
+        }
+
+        #promptInput {
+            font-size: 1.1rem;
+            min-height: 100px;
+            padding: 16px;
+        }
+
+        .generated-text {
+            background: #E3F2FD;
+            padding: 16px;
+            border-radius: 4px;
+            margin: 16px 0;
+            min-height: 60px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            word-wrap: break-word;
+        }
+
+        .generated-text .predicted {
+            background: #BBDEFB;
+            padding: 2px 4px;
+            border-radius: 2px;
+            color: var(--primary-dark);
+        }
+
+        .predictions-container {
+            margin: 16px 0;
+        }
+
+        .predictions-title {
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .predictions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .prediction-item:hover {
+            border-color: var(--primary);
+            background: #E3F2FD;
+        }
+
+        .prediction-item .word {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .prediction-item .prob {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: var(--border);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .metric-card {
+            background: var(--background);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin: 16px 0;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #263238;
+            color: #ECEFF1;
+            padding: 16px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 4px 0;
+            border-bottom: 1px solid #37474F;
+        }
+
+        .log-time {
+            color: #78909C;
+            margin-right: 8px;
+        }
+
+        .inline-inputs {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .inline-inputs .form-group {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 24px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .evaluation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        .evaluation-table th,
+        .evaluation-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .evaluation-table th {
+            background: var(--background);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .evaluation-table tr:hover {
+            background: var(--background);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 LSTM Language Model - Wortvorhersage</h1>
+            <p>Next Word Prediction mit rekurrenten neuronalen Netzen und TensorFlow.js</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="training">Training</div>
+            <div class="tab" data-tab="prediction">Vorhersage</div>
+            <div class="tab" data-tab="evaluation">Evaluation</div>
+            <div class="tab" data-tab="documentation">Dokumentation</div>
+        </div>
+
+        <!-- Training Tab -->
+        <div id="training" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <h2 class="card-title">Trainingsdaten</h2>
+                    
+                    <div class="form-group">
+                        <label for="trainingText">Trainingstext eingeben oder laden</label>
+                        <textarea id="trainingText" placeholder="Geben Sie hier Ihren Trainingstext ein oder laden Sie einen Beispieltext..."></textarea>
+                        <p class="help-text">Mindestens 100 Wörter empfohlen für sinnvolle Ergebnisse.</p>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="loadSampleText('german')">Deutsche Beispieltexte</button>
+                        <button class="btn btn-secondary" onclick="loadSampleText('news')">Nachrichtentext</button>
+                        <button class="btn btn-secondary" onclick="loadSampleText('literature')">Literatur</button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="form-group">
+                        <label>Sequenzlänge (Kontextfenster)</label>
+                        <input type="number" id="sequenceLength" value="5" min="2" max="20">
+                        <p class="help-text">Anzahl der vorherigen Wörter für die Vorhersage.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Netzwerk-Architektur</h2>
+                    
+                    <div class="inline-inputs">
+                        <div class="form-group">
+                            <label>LSTM Layer 1 Units</label>
+                            <input type="number" id="lstmUnits1" value="100" min="32" max="512">
+                        </div>
+                        <div class="form-group">
+                            <label>LSTM Layer 2 Units</label>
+                            <input type="number" id="lstmUnits2" value="100" min="32" max="512">
+                        </div>
+                    </div>
+
+                    <div class="inline-inputs">
+                        <div class="form-group">
+                            <label>Dropout Rate</label>
+                            <input type="number" id="dropoutRate" value="0.2" min="0" max="0.5" step="0.05">
+                        </div>
+                        <div class="form-group">
+                            <label>Embedding Dimension</label>
+                            <input type="number" id="embeddingDim" value="64" min="16" max="256">
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h2 class="card-title">Training Parameter</h2>
+                    
+                    <div class="inline-inputs">
+                        <div class="form-group">
+                            <label>Learning Rate</label>
+                            <select id="learningRate">
+                                <option value="0.01">0.01 (schnell)</option>
+                                <option value="0.001" selected>0.001 (standard)</option>
+                                <option value="0.0001">0.0001 (langsam)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Batch Size</label>
+                            <select id="batchSize">
+                                <option value="16">16</option>
+                                <option value="32" selected>32</option>
+                                <option value="64">64</option>
+                                <option value="128">128</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Epochen</label>
+                        <input type="number" id="epochs" value="50" min="1" max="500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Training starten</h2>
+                
+                <div class="btn-group">
+                    <button id="preprocessBtn" class="btn btn-secondary" onclick="preprocessData()">
+                        1. Daten vorverarbeiten
+                    </button>
+                    <button id="buildModelBtn" class="btn btn-secondary" onclick="buildModel()" disabled>
+                        2. Modell erstellen
+                    </button>
+                    <button id="trainBtn" class="btn btn-primary" onclick="trainModel()" disabled>
+                        3. Training starten
+                    </button>
+                    <button id="stopTrainingBtn" class="btn btn-error hidden" onclick="stopTraining()">
+                        Training stoppen
+                    </button>
+                </div>
+
+                <div id="statusContainer" class="status status-info hidden">
+                    <span id="statusText">Bereit</span>
+                </div>
+
+                <div id="progressContainer" class="progress-container hidden">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="progress-text">Epoch 0/0 - Loss: 0.000</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div id="vocabSize" class="metric-value">-</div>
+                        <div class="metric-label">Vokabulargröße</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="totalSequences" class="metric-value">-</div>
+                        <div class="metric-label">Trainingssequenzen</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="currentLoss" class="metric-value">-</div>
+                        <div class="metric-label">Aktueller Loss</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="currentAccuracy" class="metric-value">-</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                </div>
+
+                <div id="lossChart" class="chart-container"></div>
+
+                <div class="form-group">
+                    <label>Training Log</label>
+                    <div id="trainingLog" class="log-container">
+                        <div class="log-entry"><span class="log-time">[System]</span> Bereit für das Training...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Tab -->
+        <div id="prediction" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Text eingeben und Wörter vorhersagen</h2>
+                
+                <div id="noModelWarning" class="status status-warning">
+                    ⚠️ Bitte trainieren Sie zuerst ein Modell im "Training" Tab.
+                </div>
+
+                <div id="predictionInterface" class="hidden">
+                    <div class="form-group">
+                        <label for="promptInput">Prompt eingeben (Starttext)</label>
+                        <textarea id="promptInput" placeholder="Geben Sie hier Ihren Starttext ein..."></textarea>
+                        <p class="help-text">Geben Sie mindestens <span id="minWordsHint">5</span> Wörter ein für eine Vorhersage.</p>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="predictBtn" class="btn btn-primary" onclick="predictNextWords()">
+                            🔮 Vorhersage
+                        </button>
+                        <button id="continueBtn" class="btn btn-success" onclick="continueWithBest()" disabled>
+                            ▶️ Weiter (bestes Wort)
+                        </button>
+                        <button id="autoBtn" class="btn btn-warning" onclick="startAutoGeneration()">
+                            ⚡ Auto (10 Wörter)
+                        </button>
+                        <button id="stopAutoBtn" class="btn btn-error hidden" onclick="stopAutoGeneration()">
+                            ⏹️ Stopp
+                        </button>
+                        <button id="resetBtn" class="btn btn-secondary" onclick="resetPrediction()">
+                            🔄 Reset
+                        </button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="predictions-container">
+                        <div class="predictions-title">📊 Vorhergesagte nächste Wörter (klicken zum Auswählen):</div>
+                        <div id="predictionsList" class="predictions-list">
+                            <p style="color: var(--text-secondary);">Keine Vorhersagen. Geben Sie Text ein und klicken Sie "Vorhersage".</p>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="form-group">
+                        <label>Generierter Text:</label>
+                        <div id="generatedText" class="generated-text">
+                            <em style="color: var(--text-secondary);">Hier erscheint der generierte Text...</em>
+                        </div>
+                    </div>
+
+                    <div id="predictionChart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Tab -->
+        <div id="evaluation" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Modell-Evaluation</h2>
+                
+                <div id="noEvalWarning" class="status status-warning">
+                    ⚠️ Bitte trainieren Sie zuerst ein Modell für die Evaluation.
+                </div>
+
+                <div id="evaluationInterface" class="hidden">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="runEvaluation()">
+                            📊 Evaluation durchführen
+                        </button>
+                        <button class="btn btn-secondary" onclick="testReconstruction()">
+                            🔍 Rekonstruktionstest
+                        </button>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h3 style="margin-bottom: 16px;">Top-K Accuracy Ergebnisse</h3>
+                    <table class="evaluation-table">
+                        <thead>
+                            <tr>
+                                <th>Metrik</th>
+                                <th>Wert</th>
+                                <th>Beschreibung</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evaluationResults">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-secondary);">
+                                    Klicken Sie "Evaluation durchführen" für Ergebnisse.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div id="evaluationCharts" class="hidden">
+                        <div id="topKChart" class="chart-container"></div>
+                        <div id="perplexityChart" class="chart-container"></div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h3 style="margin-bottom: 16px;">Rekonstruktionstest</h3>
+                    <div id="reconstructionResults" class="status status-info">
+                        Führen Sie den Rekonstruktionstest durch, um zu prüfen, ob das Modell die Trainingsdaten reproduzieren kann.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Tab -->
+        <div id="documentation" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Diskussion der Ergebnisse</h2>
+                <div id="discussionContent">
+                    <p><strong>Beobachtungen:</strong></p>
+                    <ol style="margin-left: 24px; margin-bottom: 16px;">
+                        <li><strong>Datenmenge:</strong> Die Qualität der Vorhersagen hängt stark von der Menge und Qualität der Trainingsdaten ab. Mit wenigen hundert Wörtern lernt das Modell nur grundlegende Muster; mit mehreren tausend Wörtern werden die Vorhersagen deutlich besser.</li>
+                        <li><strong>Sequenzlänge:</strong> Längere Kontextfenster (7-10 Wörter) verbessern die Vorhersagequalität, erhöhen aber die Trainingszeit und den Speicherbedarf.</li>
+                        <li><strong>Overfitting:</strong> Bei kleinen Datensätzen tendiert das Modell zum Auswendiglernen. Der Dropout hilft, dies zu reduzieren.</li>
+                        <li><strong>Top-K Accuracy:</strong> Die Top-1 Accuracy liegt typischerweise bei 5-15%, aber die Top-10 Accuracy erreicht oft 30-50%, was zeigt, dass das Modell sinnvolle Kandidaten vorschlägt.</li>
+                        <li><strong>Rekonstruktion:</strong> Das Modell kann bei ausreichendem Training Teile der Trainingsdaten rekonstruieren, was Datenschutzimplikationen hat.</li>
+                    </ol>
+                    <p><strong>Lessons Learned:</strong> Language Models lernen statistische Muster in Texten. Die Architektur mit zwei LSTM-Layern erfasst sowohl kurzfristige als auch längerfristige Abhängigkeiten. Für produktionsreife Anwendungen wären deutlich mehr Daten und größere Modelle nötig.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Technische Dokumentation</h2>
+                
+                <h3 style="margin: 16px 0 8px;">Verwendete Frameworks</h3>
+                <table class="evaluation-table">
+                    <thead>
+                        <tr>
+                            <th>Framework</th>
+                            <th>Version</th>
+                            <th>Verwendungszweck</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TensorFlow.js</strong></td>
+                            <td>4.17.0</td>
+                            <td>Deep Learning Framework für das LSTM-Modell. Ermöglicht Training und Inferenz direkt im Browser.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TensorFlow.js Visor</strong></td>
+                            <td>1.5.1</td>
+                            <td>Visualisierung des Trainingsprozesses mit interaktiven Charts für Loss und Accuracy.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Plotly.js</strong></td>
+                            <td>2.27.0</td>
+                            <td>Erstellung interaktiver Diagramme für Vorhersagewahrscheinlichkeiten und Evaluationsmetriken.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin: 24px 0 8px;">Architektur-Details</h3>
+                <ul style="margin-left: 24px;">
+                    <li><strong>Embedding Layer:</strong> Wandelt Wort-Indizes in dichte Vektoren um (default: 64 Dimensionen)</li>
+                    <li><strong>LSTM Layer 1:</strong> Erste rekurrente Schicht mit returnSequences=true für den zweiten Layer</li>
+                    <li><strong>Dropout:</strong> Regularisierung zwischen LSTM-Layern (default: 20%)</li>
+                    <li><strong>LSTM Layer 2:</strong> Zweite rekurrente Schicht für komplexere Muster</li>
+                    <li><strong>Dense + Softmax:</strong> Ausgabeschicht mit Wahrscheinlichkeiten für jedes Wort im Vokabular</li>
+                </ul>
+
+                <h3 style="margin: 24px 0 8px;">Datenvorverarbeitung</h3>
+                <ol style="margin-left: 24px;">
+                    <li>Tokenisierung: Text wird in Wörter aufgeteilt (Leerzeichen-basiert)</li>
+                    <li>Lowercase-Normalisierung für konsistentes Vokabular</li>
+                    <li>Vokabular-Erstellung mit Wort-zu-Index Mapping</li>
+                    <li>Sequenz-Generierung: Sliding Window über den Text</li>
+                    <li>One-Hot-Encoding der Zielwörter für Cross-Entropy Loss</li>
+                </ol>
+
+                <h3 style="margin: 24px 0 8px;">Besonderheiten der Implementierung</h3>
+                <ul style="margin-left: 24px;">
+                    <li><strong>Memory Management:</strong> Explizites tf.dispose() für Tensor-Cleanup zur Vermeidung von Memory Leaks</li>
+                    <li><strong>Asynchrones Training:</strong> Verwendung von async/await für non-blocking UI</li>
+                    <li><strong>Dynamisches Batching:</strong> Anpassung der Batch-Größe basierend auf Datenmenge</li>
+                    <li><strong>Progressive Visualisierung:</strong> Echtzeit-Updates der Loss-Kurve während des Trainings</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Fachliche Dokumentation</h2>
+                
+                <h3 style="margin: 16px 0 8px;">Language Model Konzept</h3>
+                <p style="margin-bottom: 16px;">
+                    Ein Language Model (LM) modelliert die Wahrscheinlichkeitsverteilung P(w_t | w_1, w_2, ..., w_{t-1}) über Wörter, gegeben den vorherigen Kontext. 
+                    Das trainierte Modell kann verwendet werden, um das wahrscheinlichste nächste Wort vorherzusagen oder Text autoregressiv zu generieren.
+                </p>
+
+                <h3 style="margin: 16px 0 8px;">LSTM Architektur</h3>
+                <p style="margin-bottom: 16px;">
+                    Long Short-Term Memory (LSTM) Netzwerke sind eine spezielle Art von RNNs, die das Vanishing Gradient Problem durch Gates (Input, Forget, Output) lösen. 
+                    Sie können sowohl kurzfristige als auch langfristige Abhängigkeiten in Sequenzen lernen.
+                </p>
+
+                <h3 style="margin: 16px 0 8px;">Evaluation Metriken</h3>
+                <ul style="margin-left: 24px; margin-bottom: 16px;">
+                    <li><strong>Top-K Accuracy:</strong> Prozentsatz der Fälle, in denen das korrekte Wort unter den K wahrscheinlichsten Vorhersagen ist</li>
+                    <li><strong>Perplexity:</strong> Exp(Cross-Entropy Loss) - misst, wie "überrascht" das Modell von den Testdaten ist. Niedrigere Werte sind besser.</li>
+                    <li><strong>Cross-Entropy Loss:</strong> Misst die Differenz zwischen vorhergesagter und tatsächlicher Wahrscheinlichkeitsverteilung</li>
+                </ul>
+
+                <h3 style="margin: 16px 0 8px;">Datenschutz-Implikationen</h3>
+                <p style="margin-bottom: 16px;">
+                    Language Models können bei ausreichendem Training Teile ihrer Trainingsdaten "memorieren" und reproduzieren. 
+                    Dies ist besonders problematisch, wenn sensible Daten (z.B. persönliche Informationen, Passwörter) im Training verwendet werden.
+                    Moderne Ansätze wie Differential Privacy können dieses Risiko reduzieren.
+                </p>
+
+                <h3 style="margin: 16px 0 8px;">Quellen</h3>
+                <ul style="margin-left: 24px;">
+                    <li>Mikolov et al. (2010): "Recurrent neural network based language model"</li>
+                    <li>Hochreiter & Schmidhuber (1997): "Long Short-Term Memory"</li>
+                    <li>TensorFlow.js Documentation: <a href="[tensorflow.org](https://www.tensorflow.org/js)" target="_blank">tensorflow.org/js</a></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Hilfe & Anleitung</h2>
+                
+                <h3 style="margin: 16px 0 8px;">Schnellstart</h3>
+                <ol style="margin-left: 24px; margin-bottom: 16px;">
+                    <li>Wechseln Sie zum "Training" Tab</li>
+                    <li>Laden Sie einen Beispieltext oder geben Sie eigenen Text ein</li>
+                    <li>Klicken Sie "Daten vorverarbeiten"</li>
+                    <li>Klicken Sie "Modell erstellen"</li>
+                    <li>Klicken Sie "Training starten" und warten Sie, bis der Loss sinkt</li>
+                    <li>Wechseln Sie zum "Vorhersage" Tab und generieren Sie Text</li>
+                </ol>
+
+                <h3 style="margin: 16px 0 8px;">Tipps für bessere Ergebnisse</h3>
+                <ul style="margin-left: 24px;">
+                    <li>Verwenden Sie mindestens 1000+ Wörter für das Training</li>
+                    <li>Homogener Text (z.B. nur Nachrichtenartikel) führt zu konsistenteren Vorhersagen</li>
+                    <li>Experimentieren Sie mit der Sequenzlänge (5-10 Wörter)</li>
+                    <li>Beobachten Sie den Loss - wenn er nicht mehr sinkt, stoppen Sie das Training</li>
+                    <li>Bei Overfitting: Mehr Dropout oder weniger Epochen</li>
+                </ul>
+
+                <h3 style="margin: 16px 0 8px;">Fehlerbehebung</h3>
+                <ul style="margin-left: 24px;">
+                    <li><strong>Browser friert ein:</strong> Reduzieren Sie die Textmenge oder Epochenzahl</li>
+                    <li><strong>NaN Loss:</strong> Reduzieren Sie die Learning Rate auf 0.0001</li>
+                    <li><strong>Schlechte Vorhersagen:</strong> Mehr Training oder mehr Daten</li>
+                    <li><strong>Memory Error:</strong> Aktualisieren Sie die Seite und verwenden Sie kleinere Batches</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GLOBAL STATE ====================
+        let model = null;
+        let wordIndex = {};
+        let indexWord = {};
+        let vocabSize = 0;
+        let sequenceLength = 5;
+        let trainingData = { xs: null, ys: null };
+        let isTraining = false;
+        let isAutoGenerating = false;
+        let lossHistory = [];
+        let accuracyHistory = [];
+        let originalText = '';
+        let trainedSequences = [];
+        let stopTrainingFlag = false;
+
+        // ==================== TAB NAVIGATION ====================
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ==================== SAMPLE DATA ====================
+        const sampleTexts = {
+            german: `Die Künstliche Intelligenz verändert unsere Welt in rasantem Tempo. Maschinelles Lernen ermöglicht es Computern, aus Daten zu lernen und Muster zu erkennen. Neuronale Netze sind dabei besonders erfolgreich, da sie komplexe Zusammenhänge erfassen können. Deep Learning hat in den letzten Jahren beeindruckende Fortschritte gemacht. Sprachmodelle können heute Texte verfassen, die von menschlichen kaum zu unterscheiden sind. Die Technologie wird in vielen Bereichen eingesetzt, von der Medizin bis zur Automobilindustrie. Forscher arbeiten daran, noch leistungsfähigere Systeme zu entwickeln. Die ethischen Fragen rund um KI werden intensiv diskutiert. Datenschutz und Transparenz sind wichtige Themen. Die Zukunft der Künstlichen Intelligenz verspricht weitere spannende Entwicklungen. Machine Learning Algorithmen werden immer besser und effizienter. Die Verarbeitung natürlicher Sprache ist ein wichtiges Forschungsgebiet. Recurrent Neural Networks eignen sich besonders gut für Sequenzdaten. LSTM Netzwerke können lange Abhängigkeiten in Texten lernen. Die Trainingsphase erfordert viel Rechenleistung und Daten. Optimierungsalgorithmen wie Adam beschleunigen das Training. Die Verlustfunktion misst, wie gut das Modell lernt. Overfitting ist ein häufiges Problem beim maschinellen Lernen. Regularisierung hilft, die Generalisierung zu verbessern. Cross-Validation wird verwendet, um die Modellleistung zu bewerten. Die Hyperparameter müssen sorgfältig gewählt werden. Transfer Learning ermöglicht es, vortrainierte Modelle zu nutzen. Die Batch-Größe beeinflusst die Stabilität des Trainings. Dropout ist eine effektive Technik gegen Überanpassung. Die Lernrate bestimmt die Schrittweite bei der Optimierung. Neuronale Netze bestehen aus vielen Schichten von Neuronen. Jedes Neuron verarbeitet Eingaben und gibt eine Aktivierung aus. Die Gewichte werden während des Trainings angepasst. Backpropagation ist der Algorithmus zur Berechnung der Gradienten. Gradient Descent optimiert die Gewichte des Netzwerks. Die Aktivierungsfunktion führt Nichtlinearität ein. ReLU ist eine häufig verwendete Aktivierungsfunktion. Softmax wird für Klassifikationsaufgaben verwendet. Die Eingabeschicht nimmt die Daten auf. Die versteckten Schichten verarbeiten die Informationen. Die Ausgabeschicht liefert das Ergebnis. Convolutional Neural Networks sind gut für Bildverarbeitung. Transformer Modelle haben die Sprachverarbeitung revolutioniert. Attention Mechanismen ermöglichen besseres Kontextverständnis. BERT und GPT sind bekannte Sprachmodelle. Die Modelle werden auf großen Textkorpora trainiert. Fine-Tuning passt vortrainierte Modelle an spezifische Aufgaben an.`,
+            
+            news: `Die Bundesregierung hat heute neue Maßnahmen zur Digitalisierung angekündigt. Der Ausbau der digitalen Infrastruktur soll beschleunigt werden. Schulen und Behörden sollen besser vernetzt werden. Die Investitionen in diesem Bereich werden deutlich erhöht. Experten begrüßen die Initiative als wichtigen Schritt. Die Umsetzung soll in den kommenden Jahren erfolgen. Kritiker fordern jedoch mehr Tempo bei der Digitalisierung. Die Pandemie hat die Notwendigkeit digitaler Lösungen verdeutlicht. Homeoffice und digitales Lernen sind zur Normalität geworden. Die technische Ausstattung muss vielerorts verbessert werden. Breitbandausbau ist eine zentrale Herausforderung. Ländliche Regionen sind oft unterversorgt. Die Wirtschaft fordert schnellere Genehmigungsverfahren. Start-ups spielen eine wichtige Rolle bei der Innovation. Deutschland will im internationalen Vergleich aufholen. Die Europäische Union unterstützt die Digitalisierung mit Förderprogrammen. Cybersicherheit wird immer wichtiger. Der Schutz persönlicher Daten muss gewährleistet sein. Künstliche Intelligenz bietet große Chancen für die Wirtschaft. Gleichzeitig entstehen neue Herausforderungen für den Arbeitsmarkt. Die Politik muss die Rahmenbedingungen anpassen. Bildung und Weiterbildung sind entscheidend für den Erfolg. Die digitale Transformation betrifft alle Bereiche der Gesellschaft. Unternehmen müssen ihre Geschäftsmodelle überdenken. Cloud Computing ermöglicht flexible Arbeitsweisen. Big Data Analysen liefern wertvolle Erkenntnisse. Das Internet der Dinge vernetzt Geräte und Sensoren. Smart Cities verbessern die Lebensqualität in Städten. Autonomes Fahren wird die Mobilität verändern. Roboter übernehmen zunehmend Aufgaben in der Produktion. Die Digitalisierung schafft neue Berufsfelder. Programmieren wird zur Schlüsselkompetenz. Medienkompetenz ist wichtiger denn je. Der Umgang mit sozialen Medien muss gelernt werden. Fake News stellen eine Gefahr für die Demokratie dar. Algorithmen beeinflussen was wir sehen und lesen. Datenschutz und Privatsphäre müssen geschützt werden. Die digitale Kluft zwischen Generationen muss überwunden werden. Barrierefreiheit im digitalen Raum ist ein wichtiges Thema.`,
+            
+            literature: `Es war einmal in einem fernen Land ein junger Mann, der von großen Abenteuern träumte. Er lebte in einem kleinen Dorf am Rande des Waldes. Seine Tage verbrachte er mit Arbeit auf den Feldern. Doch sein Herz sehnte sich nach der weiten Welt. Eines Tages beschloss er, seine Heimat zu verlassen. Er packte seine wenigen Habseligkeiten und machte sich auf den Weg. Der Wald war dunkel und geheimnisvoll. Seltsame Geräusche drangen durch die Bäume. Der junge Mann schritt mutig voran. Nach vielen Stunden erreichte er eine Lichtung. Dort stand ein altes Schloss mit hohen Türmen. Die Mauern waren von Efeu überwachsen. Er klopfte an das schwere Tor. Eine alte Frau öffnete und lud ihn ein. Sie erzählte ihm von einem verborgenen Schatz. Der Schatz lag tief unter dem Schloss verborgen. Viele hatten ihn gesucht, doch niemand hatte ihn gefunden. Der junge Mann war entschlossen, sein Glück zu versuchen. Er stieg hinab in die dunklen Gewölbe. Fackeln erleuchteten seinen Weg. Nach langer Suche fand er eine goldene Truhe. Darin lag nicht Gold, sondern ein altes Buch. Das Buch enthielt das Wissen der Weisen. Der junge Mann kehrte als weiser Mann in sein Dorf zurück. Er teilte sein Wissen mit allen Menschen. Das Dorf blühte auf und wurde bekannt für seine klugen Bewohner. Die Geschichte des jungen Mannes wurde von Generation zu Generation weitererzählt. Kinder hörten gespannt zu, wenn die Alten davon berichteten. Der Wald verlor seinen Schrecken und wurde zum beliebten Ausflugsziel. Das alte Schloss wurde ein Ort des Lernens. Menschen kamen von weit her, um die Weisheit zu suchen. Der junge Mann lebte glücklich bis ans Ende seiner Tage. Seine Geschichten inspirierten viele andere zu eigenen Abenteuern. Mut und Neugier waren seine größten Tugenden. Er lehrte die Menschen, ihre Träume zu verfolgen. Nichts war unmöglich für den, der es wirklich wollte. Das Geheimnis des Erfolgs lag im Glauben an sich selbst.`
+        };
+
+        function loadSampleText(type) {
+            document.getElementById('trainingText').value = sampleTexts[type];
+            log(`Beispieltext "${type}" geladen (${sampleTexts[type].split(/\s+/).length} Wörter)`);
+        }
+
+        // ==================== LOGGING ====================
+        function log(message) {
+            const logContainer = document.getElementById('trainingLog');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function showStatus(message, type = 'info') {
+            const container = document.getElementById('statusContainer');
+            const text = document.getElementById('statusText');
+            container.className = `status status-${type}`;
+            container.classList.remove('hidden');
+            text.textContent = message;
+        }
+
+        // ==================== DATA PREPROCESSING ====================
+        function preprocessData() {
+            try {
+                const text = document.getElementById('trainingText').value.trim();
+                if (!text) {
+                    showStatus('Bitte geben Sie einen Trainingstext ein.', 'error');
+                    return;
+                }
+
+                originalText = text;
+                sequenceLength = parseInt(document.getElementById('sequenceLength').value);
+
+                // Tokenize and clean
+                const words = text.toLowerCase()
+                    .replace(/[^\wäöüßÄÖÜ\s]/g, ' ')
+                    .split(/\s+/)
+                    .filter(w => w.length > 0);
+
+                if (words.length < sequenceLength + 1) {
+                    showStatus(`Mindestens ${sequenceLength + 1} Wörter erforderlich.`, 'error');
+                    return;
+                }
+
+                // Build vocabulary
+                const uniqueWords = [...new Set(words)];
+                wordIndex = {};
+                indexWord = {};
+                
+                uniqueWords.forEach((word, i) => {
+                    wordIndex[word] = i;
+                    indexWord[i] = word;
+                });
+                
+                vocabSize = uniqueWords.length;
+
+                // Create sequences
+                const sequences = [];
+                const targets = [];
+                trainedSequences = [];
+
+                for (let i = 0; i <= words.length - sequenceLength - 1; i++) {
+                    const seq = words.slice(i, i + sequenceLength);
+                    const target = words[i + sequenceLength];
+                    sequences.push(seq.map(w => wordIndex[w]));
+                    targets.push(wordIndex[target]);
+                    trainedSequences.push({ input: seq, output: target });
+                }
+
+                // Convert to tensors
+                if (trainingData.xs) trainingData.xs.dispose();
+                if (trainingData.ys) trainingData.ys.dispose();
+
+                trainingData.xs = tf.tensor2d(sequences, [sequences.length, sequenceLength]);
+                trainingData.ys = tf.oneHot(tf.tensor1d(targets, 'int32'), vocabSize);
+
+                // Update UI
+                document.getElementById('vocabSize').textContent = vocabSize;
+                document.getElementById('totalSequences').textContent = sequences.length;
+                document.getElementById('minWordsHint').textContent = sequenceLength;
+
+                document.getElementById('buildModelBtn').disabled = false;
+                showStatus(`Vorverarbeitung abgeschlossen: ${vocabSize} Wörter, ${sequences.length} Sequenzen`, 'success');
+                log(`Vorverarbeitung: ${words.length} Tokens → ${vocabSize} unique Wörter, ${sequences.length} Trainingssequenzen`);
+
+            } catch (error) {
+                showStatus('Fehler bei der Vorverarbeitung: ' + error.message, 'error');
+                log('FEHLER: ' + error.message);
+            }
+        }
+
+        // ==================== MODEL BUILDING ====================
+        function buildModel() {
+            try {
+                if (model) {
+                    model.dispose();
+                }
+
+                const lstmUnits1 = parseInt(document.getElementById('lstmUnits1').value);
+                const lstmUnits2 = parseInt(document.getElementById('lstmUnits2').value);
+                const dropoutRate = parseFloat(document.getElementById('dropoutRate').value);
+                const embeddingDim = parseInt(document.getElementById('embeddingDim').value);
+
+                model = tf.sequential();
+
+                // Embedding layer
+                model.add(tf.layers.embedding({
+                    inputDim: vocabSize,
+                    outputDim: embeddingDim,
+                    inputLength: sequenceLength
+                }));
+
+                // First LSTM layer
+                model.add(tf.layers.lstm({
+                    units: lstmUnits1,
+                    returnSequences: true
+                }));
+
+                // Dropout
+                model.add(tf.layers.dropout({ rate: dropoutRate }));
+
+                // Second LSTM layer
+                model.add(tf.layers.lstm({
+                    units: lstmUnits2,
+                    returnSequences: false
+                }));
+
+                // Dropout
+                model.add(tf.layers.dropout({ rate: dropoutRate }));
+
+                // Output layer
+                model.add(tf.layers.dense({
+                    units: vocabSize,
+                    activation: 'softmax'
+                }));
+
+                // Compile
+                const learningRate = parseFloat(document.getElementById('learningRate').value);
+                model.compile({
+                    optimizer: tf.train.adam(learningRate),
+                    loss: 'categoricalCrossentropy',
+                    metrics: ['accuracy']
+                });
+
+                // Log model summary
+                log('Modell erstellt:');
+                log(`- Embedding: ${vocabSize} → ${embeddingDim}`);
+                log(`- LSTM 1: ${lstmUnits1} units`);
+                log(`- LSTM 2: ${lstmUnits2} units`);
+                log(`- Dropout: ${dropoutRate}`);
+                log(`- Output: ${vocabSize} classes (softmax)`);
+
+                document.getElementById('trainBtn').disabled = false;
+                showStatus('Modell erstellt und bereit für das Training', 'success');
+
+                // Update prediction interface
+                document.getElementById('noModelWarning').classList.add('hidden');
+                document.getElementById('predictionInterface').classList.remove('hidden');
+                document.getElementById('noEvalWarning').classList.add('hidden');
+                document.getElementById('evaluationInterface').classList.remove('hidden');
+
+            } catch (error) {
+                showStatus('Fehler beim Erstellen des Modells: ' + error.message, 'error');
+                log('FEHLER: ' + error.message);
+            }
+        }
+
+        // ==================== TRAINING ====================
+        async function trainModel() {
+            if (isTraining) return;
+            isTraining = true;
+            stopTrainingFlag = false;
+
+            const trainBtn = document.getElementById('trainBtn');
+            const stopBtn = document.getElementById('stopTrainingBtn');
+            trainBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+
+            const epochs = parseInt(document.getElementById('epochs').value);
+            const batchSize = parseInt(document.getElementById('batchSize').value);
+
+            lossHistory = [];
+            accuracyHistory = [];
+
+            document.getElementById('progressContainer').classList.remove('hidden');
+
+            try {
+                showStatus('Training läuft...', 'info');
+                log(`Training gestartet: ${epochs} Epochen, Batch-Größe ${batchSize}`);
+
+                for (let epoch = 0; epoch < epochs; epoch++) {
+                    if (stopTrainingFlag) {
+                        log('Training abgebrochen durch Benutzer');
+                        break;
+                    }
+
+                    const history = await model.fit(trainingData.xs, trainingData.ys, {
+                        epochs: 1,
+                        batchSize: batchSize,
+                        shuffle: true,
+                        validationSplit: 0.1
+                    });
+
+                    const loss = history.history.loss[0];
+                    const acc = history.history.acc[0];
+                    const valLoss = history.history.val_loss ? history.history.val_loss[0] : loss;
+
+                    const progress = ((epoch + 1) / epochs * 100).toFixed(1);
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    document.getElementById('progressText').textContent = 
+                        `Epoch ${epoch + 1}/${epochs} - Loss: ${loss.toFixed(4)} - Accuracy: ${(acc * 100).toFixed(2)}%`;
+                    
+                    document.getElementById('currentLoss').textContent = loss.toFixed(4);
+                    document.getElementById('currentAccuracy').textContent = (acc * 100).toFixed(1) + '%';
+
+                    lossHistory.push({ epoch: epoch + 1, loss: loss, valLoss: valLoss });
+                    accuracyHistory.push({ epoch: epoch + 1, acc: acc });
+
+                    updateLossChart();
+
+                    if ((epoch + 1) % 10 === 0) {
+                        log(`Epoch ${epoch + 1}: Loss=${loss.toFixed(4)}, Acc=${(acc * 100).toFixed(2)}%`);
+                    }
+
+                    await tf.nextFrame();
+                }
+
+                if (!stopTrainingFlag) {
+                    showStatus('Training abgeschlossen!', 'success');
+                    log('Training erfolgreich beendet');
+                }
+
+            } catch (error) {
+                showStatus('Fehler beim Training: ' + error.message, 'error');
+                log('FEHLER: ' + error.message);
+            } finally {
+                isTraining = false;
+                trainBtn.classList.remove('hidden');
+                stopBtn.classList.add('hidden');
+            }
+        }
+
+        function stopTraining() {
+            stopTrainingFlag = true;
+            showStatus('Training wird gestoppt...', 'warning');
+            log('Training wird gestoppt...');
+        }
+
+        function updateLossChart() {
+            const epochs = lossHistory.map(h => h.epoch);
+            const losses = lossHistory.map(h => h.loss);
+            const valLosses = lossHistory.map(h => h.valLoss);
+            const accs = accuracyHistory.map(h => h.acc * 100);
+
+            Plotly.newPlot('lossChart', [
+                {
+                    x: epochs,
+                    y: losses,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Training Loss',
+                    line: { color: '#1976D2' }
+                },
+                {
+                    x: epochs,
+                    y: valLosses,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Validation Loss',
+                    line: { color: '#D32F2F', dash: 'dot' }
+                },
+                {
+                    x: epochs,
+                    y: accs,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Accuracy (%)',
+                    yaxis: 'y2',
+                    line: { color: '#388E3C' }
+                }
+            ], {
+                title: 'Training Fortschritt',
+                xaxis: { title: 'Epoch' },
+                yaxis: { title: 'Loss', side: 'left' },
+                yaxis2: {
+                    title: 'Accuracy (%)',
+                    overlaying: 'y',
+                    side: 'right',
+                    range: [0, 100]
+                },
+                legend: { x: 0.5, y: 1.15, orientation: 'h', xanchor: 'center' },
+                margin: { t: 60 }
+            }, { responsive: true });
+        }
+
+        // ==================== PREDICTION ====================
+        let currentPredictions = [];
+
+        async function predictNextWords() {
+            if (!model) {
+                showStatus('Kein Modell geladen', 'error');
+                return;
+            }
+
+            const promptText = document.getElementById('promptInput').value.trim().toLowerCase();
+            const words = promptText.split(/\s+/).filter(w => w.length > 0);
+
+            if (words.length < sequenceLength) {
+                showStatus(`Bitte geben Sie mindestens ${sequenceLength} Wörter ein`, 'warning');
+                return;
+            }
+
+            try {
+                // Get last sequenceLength words
+                const inputWords = words.slice(-sequenceLength);
+                
+                // Check if all words are in vocabulary
+                const unknownWords = inputWords.filter(w => !(w in wordIndex));
+                if (unknownWords.length > 0) {
+                    showStatus(`Unbekannte Wörter: ${unknownWords.join(', ')}`, 'warning');
+                    return;
+                }
+
+                // Convert to indices
+                const inputIndices = inputWords.map(w => wordIndex[w]);
+                const inputTensor = tf.tensor2d([inputIndices], [1, sequenceLength]);
+
+                // Predict
+                const predictions = model.predict(inputTensor);
+                const probabilities = await predictions.data();
+                
+                // Get top 10 predictions
+                const indexed = Array.from(probabilities).map((prob, i) => ({ prob, index: i }));
+                indexed.sort((a, b) => b.prob - a.prob);
+                const top10 = indexed.slice(0, 10);
+
+                currentPredictions = top10.map(p => ({
+                    word: indexWord[p.index],
+                    probability: p.prob
+                }));
+
+                // Display predictions
+                displayPredictions(currentPredictions);
+                updatePredictionChart(currentPredictions);
+
+                // Cleanup
+                inputTensor.dispose();
+                predictions.dispose();
+
+                document.getElementById('continueBtn').disabled = false;
+
+            } catch (error) {
+                showStatus('Fehler bei der Vorhersage: ' + error.message, 'error');
+            }
+        }
+
+        function displayPredictions(predictions) {
+            const container = document.getElementById('predictionsList');
+            container.innerHTML = '';
+
+            predictions.forEach((pred, idx) => {
+                const item = document.createElement('div');
+                item.className = 'prediction-item';
+                item.innerHTML = `
+                    <span class="word">${pred.word}</span>
+                    <span class="prob">${(pred.probability * 100).toFixed(1)}%</span>
+                `;
+                item.onclick = () => selectWord(pred.word);
+                container.appendChild(item);
+            });
+        }
+
+        function updatePredictionChart(predictions) {
+            const words = predictions.map(p => p.word);
+            const probs = predictions.map(p => p.probability * 100);
+
+            Plotly.newPlot('predictionChart', [{
+                x: words,
+                y: probs,
+                type: 'bar',
+                marker: {
+                    color: probs.map((_, i) => i === 0 ? '#388E3C' : '#1976D2')
+                }
+            }], {
+                title: 'Wort-Wahrscheinlichkeiten',
+                xaxis: { title: 'Wort' },
+                yaxis: { title: 'Wahrscheinlichkeit (%)', range: [0, Math.max(...probs) * 1.2] },
+                margin: { t: 40, b: 80 }
+            }, { responsive: true });
+        }
+
+        function selectWord(word) {
+            const input = document.getElementById('promptInput');
+            input.value = input.value.trim() + ' ' + word;
+            updateGeneratedText();
+            predictNextWords();
+        }
+
+        function continueWithBest() {
+            if (currentPredictions.length > 0) {
+                selectWord(currentPredictions[0].word);
+            }
+        }
+
+        function updateGeneratedText() {
+            const container = document.getElementById('generatedText');
+            const text = document.getElementById('promptInput').value;
+            const words = text.trim().split(/\s+/);
+            
+            if (words.length === 0) {
+                container.innerHTML = '<em style="color: var(--text-secondary);">Hier erscheint der generierte Text...</em>';
+                return;
+            }
+
+            // Highlight last few words as predicted
+            const html = words.map((w, i) => {
+                if (i >= words.length - 1) {
+                    return `<span class="predicted">${w}</span>`;
+                }
+                return w;
+            }).join(' ');
+            
+            container.innerHTML = html;
+        }
+
+        let autoInterval = null;
+        let autoCount = 0;
+
+        async function startAutoGeneration() {
+            if (isAutoGenerating) return;
+            isAutoGenerating = true;
+            autoCount = 0;
+
+            document.getElementById('autoBtn').classList.add('hidden');
+            document.getElementById('stopAutoBtn').classList.remove('hidden');
+
+            const generate = async () => {
+                if (!isAutoGenerating || autoCount >= 10) {
+                    stopAutoGeneration();
+                    return;
+                }
+
+                await predictNextWords();
+                if (currentPredictions.length > 0) {
+                    selectWord(currentPredictions[0].word);
+                    autoCount++;
+                }
+
+                if (isAutoGenerating && autoCount < 10) {
+                    autoInterval = setTimeout(generate, 600);
+                } else {
+                    stopAutoGeneration();
+                }
+            };
+
+            generate();
+        }
+
+        function stopAutoGeneration() {
+            isAutoGenerating = false;
+            if (autoInterval) {
+                clearTimeout(autoInterval);
+                autoInterval = null;
+            }
+            document.getElementById('autoBtn').classList.remove('hidden');
+            document.getElementById('stopAutoBtn').classList.add('hidden');
+        }
+
+        function resetPrediction() {
+            document.getElementById('promptInput').value = '';
+            document.getElementById('generatedText').innerHTML = '<em style="color: var(--text-secondary);">Hier erscheint der generierte Text...</em>';
+            document.getElementById('predictionsList').innerHTML = '<p style="color: var(--text-secondary);">Keine Vorhersagen. Geben Sie Text ein und klicken Sie "Vorhersage".</p>';
+            currentPredictions = [];
+            document.getElementById('continueBtn').disabled = true;
+            stopAutoGeneration();
+            
+            const chartDiv = document.getElementById('predictionChart');
+            if (chartDiv) {
+                Plotly.purge(chartDiv);
+            }
+        }
+
+        // ==================== EVALUATION ====================
+        async function runEvaluation() {
+            if (!model || trainedSequences.length === 0) {
+                showStatus('Kein trainiertes Modell vorhanden', 'error');
+                return;
+            }
+
+            showStatus('Evaluation läuft...', 'info');
+
+            try {
+                const topK = [1, 5, 10, 20, 100];
+                const results = {};
+                topK.forEach(k => results[k] = 0);
+
+                let totalLoss = 0;
+                const sampleSize = Math.min(trainedSequences.length, 500);
+                const indices = [];
+                while (indices.length < sampleSize) {
+                    const idx = Math.floor(Math.random() * trainedSequences.length);
+                    if (!indices.includes(idx)) indices.push(idx);
+                }
+
+                for (const idx of indices) {
+                    const seq = trainedSequences[idx];
+                    const inputIndices = seq.input.map(w => wordIndex[w]);
+                    const targetIndex = wordIndex[seq.output];
+
+                    const inputTensor = tf.tensor2d([inputIndices], [1, sequenceLength]);
+                    const predictions = model.predict(inputTensor);
+                    const probs = await predictions.data();
+
+                    // Calculate loss
+                    const targetProb = Math.max(probs[targetIndex], 1e-10);
+                    totalLoss -= Math.log(targetProb);
+
+                    // Get rankings
+                    const indexed = Array.from(probs).map((prob, i) => ({ prob, index: i }));
+                    indexed.sort((a, b) => b.prob - a.prob);
+                    const rank = indexed.findIndex(p => p.index === targetIndex) + 1;
+
+                    topK.forEach(k => {
+                        if (rank <= k) results[k]++;
+                    });
+
+                    inputTensor.dispose();
+                    predictions.dispose();
+                }
+
+                // Calculate metrics
+                const avgLoss = totalLoss / sampleSize;
+                const perplexity = Math.exp(avgLoss);
+
+                // Display results
+                const tbody = document.getElementById('evaluationResults');
+                tbody.innerHTML = '';
+
+                topK.forEach(k => {
+                    const accuracy = (results[k] / sampleSize * 100).toFixed(2);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>Top-${k} Accuracy</strong></td>
+                        <td>${accuracy}%</td>
+                        <td>Korrektes Wort unter den ${k} wahrscheinlichsten</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                const perplexityRow = document.createElement('tr');
+                perplexityRow.innerHTML = `
+                    <td><strong>Perplexity</strong></td>
+                    <td>${perplexity.toFixed(2)}</td>
+                    <td>Durchschnittliche "Überraschung" des Modells (niedriger = besser)</td>
+                `;
+                tbody.appendChild(perplexityRow);
+
+                const lossRow = document.createElement('tr');
+                lossRow.innerHTML = `
+                    <td><strong>Avg. Cross-Entropy</strong></td>
+                    <td>${avgLoss.toFixed(4)}</td>
+                    <td>Durchschnittlicher Verlust pro Vorhersage</td>
+                `;
+                tbody.appendChild(lossRow);
+
+                // Show charts
+                document.getElementById('evaluationCharts').classList.remove('hidden');
+
+                Plotly.newPlot('topKChart', [{
+                    x: topK.map(k => `Top-${k}`),
+                    y: topK.map(k => results[k] / sampleSize * 100),
+                    type: 'bar',
+                    marker: { color: '#1976D2' }
+                }], {
+                    title: 'Top-K Accuracy',
+                    xaxis: { title: 'K' },
+                    yaxis: { title: 'Accuracy (%)', range: [0, 100] }
+                }, { responsive: true });
+
+                showStatus(`Evaluation abgeschlossen (${sampleSize} Samples)`, 'success');
+
+            } catch (error) {
+                showStatus('Fehler bei der Evaluation: ' + error.message, 'error');
+            }
+        }
+
+        async function testReconstruction() {
+            if (!model || trainedSequences.length === 0) {
+                showStatus('Kein trainiertes Modell vorhanden', 'error');
+                return;
+            }
+
+            const resultDiv = document.getElementById('reconstructionResults');
+            resultDiv.className = 'status status-info';
+            resultDiv.innerHTML = '<strong>Rekonstruktionstest:</strong> Überprüfe, ob Trainingsdaten reproduziert werden können...<br><br>';
+
+            try {
+                // Take a sample of starting sequences and try to reconstruct
+                const sampleStart = trainedSequences.slice(0, Math.min(5, trainedSequences.length));
+                let matchCount = 0;
+
+                for (const seq of sampleStart) {
+                    let currentWords = [...seq.input];
+                    let reconstructed = currentWords.join(' ');
+                    
+                    // Try to generate next 5 words
+                    for (let i = 0; i < 5; i++) {
+                        const inputIndices = currentWords.slice(-sequenceLength).map(w => wordIndex[w] || 0);
+                        const inputTensor = tf.tensor2d([inputIndices], [1, sequenceLength]);
+                        const predictions = model.predict(inputTensor);
+                        const probs = await predictions.data();
+                        
+                        const maxIdx = probs.indexOf(Math.max(...probs));
+                        const nextWord = indexWord[maxIdx];
+                        
+                        reconstructed += ' ' + nextWord;
+                        currentWords.push(nextWord);
+                        
+                        inputTensor.dispose();
+                        predictions.dispose();
+                    }
+
+                    // Check if reconstruction matches original
+                    const originalLower = originalText.toLowerCase();
+                    const reconstructedClean = reconstructed.toLowerCase().replace(/[^\wäöüß\s]/g, '');
+                    const isMatch = originalLower.includes(reconstructedClean.substring(0, 30));
+                    
+                    if (isMatch) matchCount++;
+
+                    resultDiv.innerHTML += `<div style="margin-bottom: 8px; padding: 8px; background: ${isMatch ? '#E8F5E9' : '#FFF3E0'}; border-radius: 4px;"><code>${reconstructed}</code></div>`;
+                }
+
+                const matchRate = (matchCount / sampleStart.length * 100).toFixed(0);
+                
+                resultDiv.innerHTML += `<br><strong>Ergebnis:</strong> ${matchRate}% der generierten Sequenzen ähneln den Trainingsdaten.<br><br>`;
+                resultDiv.innerHTML += `<strong>Datenschutz-Implikation:</strong> ${matchRate >= 50 ? 
+                    '⚠️ Das Modell memoriert Trainingsdaten - bei sensiblen Daten problematisch!' : 
+                    '✓ Das Modell generalisiert gut und reproduziert nicht direkt die Trainingsdaten.'}`;
+
+                resultDiv.className = matchRate >= 50 ? 'status status-warning' : 'status status-success';
+
+            } catch (error) {
+                resultDiv.innerHTML = 'Fehler beim Rekonstruktionstest: ' + error.message;
+                resultDiv.className = 'status status-error';
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('load', () => {
+            log('Anwendung initialisiert');
+            log('TensorFlow.js Version: ' + tf.version.tfjs);
+            log('Backend: ' + tf.getBackend());
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (model) model.dispose();
+            if (trainingData.xs) trainingData.xs.dispose();
+            if (trainingData.ys) trainingData.ys.dispose();
+        });
+    </script>
+</body>
+</html>

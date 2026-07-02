@@ -63,7 +63,6 @@
             font-size: 0.95rem;
         }
 
-        /* ── Tabs (nur Dokumentation) ── */
         .tabs {
             display: flex;
             border-bottom: 2px solid var(--border);
@@ -97,7 +96,6 @@
             display: block;
         }
 
-        /* ── Cards ── */
         .card {
             background: var(--surface);
             border-radius: 8px;
@@ -131,7 +129,7 @@
             gap: 24px;
         }
 
-        /* ── Form elements ── */
+
         .form-group {
             margin-bottom: 16px;
         }
@@ -186,7 +184,7 @@
             min-width: 110px;
         }
 
-        /* ── Buttons ── */
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -260,7 +258,7 @@
             margin-top: 8px;
         }
 
-        /* ── Loader overlay ── */
+
         .loader-overlay {
             position: fixed;
             inset: 0;
@@ -317,7 +315,7 @@
             }
         }
 
-        /* ── Inline spinner (Buttons) ── */
+
         .btn-spinner {
             display: inline-block;
             width: 14px;
@@ -328,7 +326,7 @@
             animation: spin .8s linear infinite;
         }
 
-        /* ── Progress ── */
+
         .progress-container {
             margin: 16px 0;
         }
@@ -388,7 +386,7 @@
             border-left: 4px solid var(--error);
         }
 
-        /* ── Metrics ── */
+
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -417,13 +415,13 @@
             margin-top: 4px;
         }
 
-        /* ── Chart ── */
+
         .chart-container {
             height: 300px;
             margin: 16px 0;
         }
 
-        /* ── Log ── */
+
         .log-container {
             max-height: 180px;
             overflow-y: auto;
@@ -446,7 +444,7 @@
             margin-right: 8px;
         }
 
-        /* ── Generated text ── */
+
         #generatedText {
             background: #E3F2FD;
             padding: 16px;
@@ -464,7 +462,6 @@
             color: var(--primary-dark);
         }
 
-        /* ── Predictions list ── */
         .predictions-list {
             display: flex;
             flex-wrap: wrap;
@@ -501,7 +498,6 @@
             border-radius: 10px;
         }
 
-        /* ── Eval table ── */
         .evaluation-table {
             width: 100%;
             border-collapse: collapse;
@@ -531,7 +527,6 @@
             margin: 20px 0;
         }
 
-        /* ── Section heading style (non-tab) ── */
         .section-heading {
             font-size: 1.45rem;
             font-weight: 700;
@@ -558,7 +553,6 @@
             }
         }
 
-        /* Rekonstruktionstest */
         #reconstructionResults {
             display: block;
             word-break: break-word;
@@ -604,7 +598,6 @@
 
 <body>
 
-    <!-- ══ Loader Overlay ══ -->
     <div class="loader-overlay" id="loaderOverlay">
         <div class="loader-box">
             <div class="loader-spinner"></div>
@@ -615,7 +608,7 @@
 
     <div class="container">
         <header>
-            <h1>🧠 LSTM Language Model – Wortvorhersage</h1>
+            <h1>LSTM Language Model – Wortvorhersage</h1>
             <p>Next Word Prediction mit rekurrenten neuronalen Netzen und TensorFlow.js</p>
         </header>
 
@@ -625,13 +618,11 @@
             <div class="tab" data-tab="documentation">Dokumentation</div>
         </div>
 
-        <!-- ════════════════════════════════════════
-         MAIN TAB  (Training + Vorhersage + Eval)
-         ════════════════════════════════════════ -->
+        <!-- Main Tab  -->
         <div id="main" class="tab-content active">
 
-            <!-- ── ABSCHNITT: TRAINING ── -->
-            <div class="section-heading">⚙️ Training</div>
+            <!-- ── TRAINING ── -->
+            <div class="section-heading">Training</div>
 
             <div class="grid">
                 <!-- Trainingsdaten -->
@@ -643,9 +634,9 @@
                         <p class="help-text">Mindestens 100 Wörter für sinnvolle Ergebnisse empfohlen.</p>
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-secondary" onclick="loadSampleText('german')">🤖 KI-Text</button>
-                        <button class="btn btn-secondary" onclick="loadSampleText('news')">📰 Nachrichten</button>
-                        <button class="btn btn-secondary" onclick="loadSampleText('literature')">📖 Literatur</button>
+                        <button class="btn btn-secondary" onclick="loadSampleText('german')">KI-Text</button>
+                        <button class="btn btn-secondary" onclick="loadSampleText('news')">Nachrichten</button>
+                        <button class="btn btn-secondary" onclick="loadSampleText('literature')">Literatur</button>
                     </div>
                     <div class="section-divider"></div>
                     <div class="form-group">
@@ -764,8 +755,8 @@
                 </div>
             </div>
 
-            <!-- ── ABSCHNITT: VORHERSAGE ── -->
-            <div class="section-heading">🔮 Vorhersage</div>
+            <!-- ── Vorhersage ── -->
+            <div class="section-heading">Vorhersage</div>
 
             <div class="card">
                 <div id="noModelWarning" class="status status-warning">
@@ -820,8 +811,8 @@
                 </div>
             </div>
 
-            <!-- ── ABSCHNITT: EVALUATION ── -->
-            <div class="section-heading">📊 Evaluation</div>
+            <!-- Evaluation -->
+            <div class="section-heading">Evaluation</div>
 
             <div class="card">
                 <div id="noEvalWarning" class="status status-warning">
@@ -874,9 +865,7 @@
         </div><!-- /main tab -->
 
 
-        <!-- ════════════════════════════════
-         DOKUMENTATION TAB
-         ════════════════════════════════ -->
+        <!--DOKUMENTATION TAB-->
         <div id="documentation" class="tab-content">
 
             <div class="card">
@@ -997,9 +986,8 @@
     </div><!-- /container -->
 
     <script>
-        // ══════════════════════════════════════════
+
         //  GLOBAL STATE
-        // ══════════════════════════════════════════
         let model = null;
         let wordIndex = {}, indexWord = {};
         let vocabSize = 0, sequenceLength = 5;
@@ -1011,9 +999,8 @@
         let currentPredictions = [];
         let autoInterval = null, autoCount = 0;
 
-        // ══════════════════════════════════════════
+
         //  LOADER OVERLAY
-        // ══════════════════════════════════════════
         function showLoader(title = 'Bitte warten…', sub = 'Vorgang läuft') {
             document.getElementById('loaderTitle').textContent = title;
             document.getElementById('loaderSub').textContent = sub;
@@ -1023,9 +1010,8 @@
             document.getElementById('loaderOverlay').classList.remove('active');
         }
 
-        // ══════════════════════════════════════════
+
         //  TABS
-        // ══════════════════════════════════════════
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1035,9 +1021,7 @@
             });
         });
 
-        // ══════════════════════════════════════════
         //  SAMPLE TEXTS
-        // ══════════════════════════════════════════
         const sampleTexts = {
             german: `Die Künstliche Intelligenz verändert unsere Welt in rasantem Tempo. Maschinelles Lernen ermöglicht es Computern, aus Daten zu lernen und Muster zu erkennen. Neuronale Netze sind dabei besonders erfolgreich, da sie komplexe Zusammenhänge erfassen können. Deep Learning hat in den letzten Jahren beeindruckende Fortschritte gemacht. Sprachmodelle können heute Texte verfassen, die von menschlichen kaum zu unterscheiden sind. Die Technologie wird in vielen Bereichen eingesetzt, von der Medizin bis zur Automobilindustrie. Forscher arbeiten daran, noch leistungsfähigere Systeme zu entwickeln. Die ethischen Fragen rund um KI werden intensiv diskutiert. Datenschutz und Transparenz sind wichtige Themen. Die Zukunft der Künstlichen Intelligenz verspricht weitere spannende Entwicklungen. Machine Learning Algorithmen werden immer besser und effizienter. Die Verarbeitung natürlicher Sprache ist ein wichtiges Forschungsgebiet. Recurrent Neural Networks eignen sich besonders gut für Sequenzdaten. LSTM Netzwerke können lange Abhängigkeiten in Texten lernen. Die Trainingsphase erfordert viel Rechenleistung und Daten. Optimierungsalgorithmen wie Adam beschleunigen das Training. Die Verlustfunktion misst, wie gut das Modell lernt. Overfitting ist ein häufiges Problem beim maschinellen Lernen. Regularisierung hilft, die Generalisierung zu verbessern. Cross-Validation wird verwendet, um die Modellleistung zu bewerten. Die Hyperparameter müssen sorgfältig gewählt werden. Transfer Learning ermöglicht es, vortrainierte Modelle zu nutzen. Die Batch-Größe beeinflusst die Stabilität des Trainings. Dropout ist eine effektive Technik gegen Überanpassung. Die Lernrate bestimmt die Schrittweite bei der Optimierung. Neuronale Netze bestehen aus vielen Schichten von Neuronen. Jedes Neuron verarbeitet Eingaben und gibt eine Aktivierung aus. Die Gewichte werden während des Trainings angepasst. Backpropagation ist der Algorithmus zur Berechnung der Gradienten. Gradient Descent optimiert die Gewichte des Netzwerks.`,
             news: `Die Bundesregierung hat heute neue Maßnahmen zur Digitalisierung angekündigt. Der Ausbau der digitalen Infrastruktur soll beschleunigt werden. Schulen und Behörden sollen besser vernetzt werden. Die Investitionen in diesem Bereich werden deutlich erhöht. Experten begrüßen die Initiative als wichtigen Schritt. Die Umsetzung soll in den kommenden Jahren erfolgen. Kritiker fordern jedoch mehr Tempo bei der Digitalisierung. Die Pandemie hat die Notwendigkeit digitaler Lösungen verdeutlicht. Homeoffice und digitales Lernen sind zur Normalität geworden. Die technische Ausstattung muss vielerorts verbessert werden. Breitbandausbau ist eine zentrale Herausforderung. Ländliche Regionen sind oft unterversorgt. Die Wirtschaft fordert schnellere Genehmigungsverfahren. Start-ups spielen eine wichtige Rolle bei der Innovation. Deutschland will im internationalen Vergleich aufholen. Die Europäische Union unterstützt die Digitalisierung mit Förderprogrammen. Cybersicherheit wird immer wichtiger. Der Schutz persönlicher Daten muss gewährleistet sein. Künstliche Intelligenz bietet große Chancen für die Wirtschaft. Gleichzeitig entstehen neue Herausforderungen für den Arbeitsmarkt. Die Politik muss die Rahmenbedingungen anpassen. Bildung und Weiterbildung sind entscheidend für den Erfolg. Die digitale Transformation betrifft alle Bereiche der Gesellschaft. Unternehmen müssen ihre Geschäftsmodelle überdenken. Cloud Computing ermöglicht flexible Arbeitsweisen.`,
@@ -1049,9 +1033,8 @@
             log(`Beispieltext geladen (${sampleTexts[type].split(/\s+/).length} Wörter)`);
         }
 
-        // ══════════════════════════════════════════
+
         //  LOGGING & STATUS
-        // ══════════════════════════════════════════
         function log(msg) {
             const c = document.getElementById('trainingLog');
             const t = new Date().toLocaleTimeString();
@@ -1068,12 +1051,10 @@
             document.getElementById('statusText').textContent = msg;
         }
 
-        // ══════════════════════════════════════════
         //  1. PREPROCESS
-        // ══════════════════════════════════════════
         function preprocessData() {
             showLoader('Daten werden verarbeitet…', 'Tokenisierung & Vokabular aufbauen');
-            // defer so the overlay renders first
+
             setTimeout(() => {
                 try {
                     const text = document.getElementById('trainingText').value.trim();
@@ -1128,9 +1109,8 @@
             }, 60);
         }
 
-        // ══════════════════════════════════════════
+
         //  2. BUILD MODEL
-        // ══════════════════════════════════════════
         function buildModel() {
             showLoader('Modell wird erstellt…', 'LSTM-Architektur kompilieren');
             setTimeout(() => {
@@ -1175,9 +1155,8 @@
             }, 60);
         }
 
-        // ══════════════════════════════════════════
+
         //  3. TRAIN
-        // ══════════════════════════════════════════
         async function trainModel() {
             if (isTraining) return;
             isTraining = true; stopTrainingFlag = false;
@@ -1253,9 +1232,8 @@
             }, { responsive: true });
         }
 
-        // ══════════════════════════════════════════
+
         //  PREDICTION
-        // ══════════════════════════════════════════
         async function predictNextWords() {
             if (!model) return;
             const raw = document.getElementById('promptInput').value.trim().toLowerCase();
@@ -1360,9 +1338,8 @@
             Plotly.purge('predictionChart');
         }
 
-        // ══════════════════════════════════════════
+
         //  EVALUATION
-        // ══════════════════════════════════════════
         async function runEvaluation() {
             if (!model || !trainedSequences.length) return;
             showLoader('Evaluation läuft…', 'Top-K Accuracy & Perplexity berechnen');
@@ -1481,9 +1458,8 @@
         }
 
 
-        // ══════════════════════════════════════════
+
         //  INIT
-        // ══════════════════════════════════════════
         window.addEventListener('load', () => {
             log('Anwendung gestartet');
             log('TensorFlow.js ' + tf.version.tfjs + ' | Backend: ' + tf.getBackend());
